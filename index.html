@@ -51,7 +51,7 @@
 
         .toolbar button {
             background: #3b3b58;
-            border: none;
+            border: 1px solid #4f4f6e;
             color: #f0f0ff;
             padding: 6px 16px;
             border-radius: 6px;
@@ -62,7 +62,6 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            border: 1px solid #4f4f6e;
         }
 
         .toolbar button:hover {
@@ -73,20 +72,6 @@
 
         .toolbar button:active {
             background: #5f5f82;
-        }
-
-        .toolbar label {
-            background: #3b3b58;
-            padding: 4px 12px;
-            border-radius: 6px;
-            border: 1px solid #4f4f6e;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-
-        .toolbar label:hover {
-            background: #4f4f72;
         }
 
         .toolbar input[type="file"] {
@@ -103,7 +88,7 @@
             color: #aab;
         }
 
-        /* ===== Основной контейнер (2 колонки) ===== */
+        /* ===== Основной контейнер ===== */
         .split-container {
             display: flex;
             flex: 1;
@@ -111,7 +96,7 @@
             overflow: hidden;
         }
 
-        /* ===== Левая панель (редактор) ===== */
+        /* ===== Левая панель ===== */
         .editor-panel {
             flex: 1 1 50%;
             background: #1a1a2a;
@@ -122,7 +107,7 @@
             overflow: hidden;
         }
 
-        .editor-panel .panel-header {
+        .editor-panel .panel-header, .preview-panel .panel-header {
             background: #25253b;
             padding: 8px 16px;
             font-size: 0.8rem;
@@ -136,7 +121,7 @@
             flex-shrink: 0;
         }
 
-        .editor-panel .panel-header span:last-child {
+        .editor-panel .panel-header span:last-child, .preview-panel .panel-header span:last-child {
             font-size: 0.7rem;
             background: #2e2e48;
             padding: 2px 10px;
@@ -158,7 +143,6 @@
             tab-size: 4;
             white-space: pre;
             overflow: auto;
-            border: none;
             box-shadow: inset 0 0 0 1px #282840;
         }
 
@@ -167,34 +151,13 @@
             background: #141425;
         }
 
-        /* ===== Правая панель (превью IMGUI) ===== */
+        /* ===== Правая панель ===== */
         .preview-panel {
             flex: 1 1 50%;
             background: #1c1c30;
             display: flex;
             flex-direction: column;
             min-width: 280px;
-        }
-
-        .preview-panel .panel-header {
-            background: #25253b;
-            padding: 8px 16px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #8a8aaa;
-            border-bottom: 1px solid #33334a;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .preview-panel .panel-header span:last-child {
-            font-size: 0.7rem;
-            background: #2e2e48;
-            padding: 2px 10px;
-            border-radius: 20px;
         }
 
         .preview-frame-wrapper {
@@ -214,117 +177,62 @@
             border: 1px solid #3a3a5a;
             border-radius: 12px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-            transition: border 0.15s;
             min-height: 300px;
             min-width: 200px;
         }
 
-        /* ===== Адаптивность ===== */
         @media (max-width: 720px) {
             .split-container {
                 flex-direction: column;
-                height: calc(100vh - 52px);
             }
             .editor-panel {
                 border-right: none;
                 border-bottom: 2px solid #33334a;
-                flex: 1 1 50%;
-                min-height: 200px;
             }
-            .preview-panel {
-                flex: 1 1 50%;
-                min-height: 200px;
-            }
-            .toolbar .title {
-                font-size: 0.9rem;
-            }
-            .toolbar button {
-                font-size: 0.75rem;
-                padding: 4px 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .toolbar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 6px;
-                padding: 8px;
-            }
-            .toolbar .btn-group {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .status-badge {
-                margin-left: 0;
-                text-align: center;
-            }
-        }
-
-        /* scrollbar */
-        textarea::-webkit-scrollbar {
-            width: 10px;
-            background: #1a1a2a;
-        }
-        textarea::-webkit-scrollbar-thumb {
-            background: #3f3f62;
-            border-radius: 8px;
-        }
-        textarea::-webkit-scrollbar-thumb:hover {
-            background: #5a5a82;
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== Верхняя панель ===== -->
     <div class="toolbar">
         <span class="title">🧩 IMGUI Studio</span>
         <div class="btn-group">
             <button id="loadBtn" title="Загрузить код из файла">📂 Загрузить</button>
             <button id="saveBtn" title="Скачать текущий код">💾 Выгрузить</button>
-            <button id="applyBtn" title="Обновить превью (или Ctrl+Enter)">▶ Применить</button>
-            <label for="fileInput" style="display:none;">📂 Загрузить</label>
-            <input type="file" id="fileInput" accept=".html,.htm,.txt,.js,.css,.json,.xml,.svg,.lua,.py,.c,.cpp,.java">
+            <button id="applyBtn" title="Обновить превью (Ctrl+Enter)">▶ Применить</button>
+            <input type="file" id="fileInput" accept=".html,.htm,.txt,.js,.css">
         </div>
         <span class="status-badge" id="statusBadge">⚡ готово</span>
     </div>
 
-    <!-- ===== Две колонки ===== -->
     <div class="split-container">
-
-        <!-- ЛЕВАЯ: редактор -->
         <div class="editor-panel">
             <div class="panel-header">
                 <span>📝 РЕДАКТОР КОДА</span>
                 <span id="charCount">0 симв.</span>
             </div>
-            <textarea id="codeEditor" spellcheck="false" placeholder="Вставьте или напишите ваш код…">// Пример IMGUI кода (HTML/CSS/JS)
-// Попробуйте вставить свой код и нажмите "Применить"
-&lt;div style="background: #2a2a4a; padding: 20px; border-radius: 16px; color: #eee; font-family: sans-serif;"&gt;
-    &lt;h2 style="color: #b0b0ff;"&gt;Привет, IMGUI!&lt;/h2&gt;
-    &lt;p style="background: #1f1f3a; padding: 12px; border-radius: 8px;"&gt;
+            <textarea id="codeEditor" spellcheck="false" placeholder="Вставьте или напишите ваш код…"><div style="background: #2a2a4a; padding: 20px; border-radius: 16px; color: #eee; font-family: sans-serif;">
+    <h2 style="color: #b0b0ff;">Привет, IMGUI!</h2>
+    <p style="background: #1f1f3a; padding: 12px; border-radius: 8px;">
         Это пример интерфейса. Замените код на свой.
-    &lt;/p&gt;
-    &lt;button style="background: #6c6cff; border: none; padding: 10px 20px; border-radius: 8px; color: white; font-weight: bold;"&gt;Нажми меня&lt;/button&gt;
-&lt;/div&gt;</textarea>
+    </p>
+    <button style="background: #6c6cff; border: none; padding: 10px 20px; border-radius: 8px; color: white; font-weight: bold; cursor: pointer;">Нажми меня</button>
+</div></textarea>
         </div>
 
-        <!-- ПРАВАЯ: превью IMGUI -->
         <div class="preview-panel">
             <div class="panel-header">
-                <span>🖥️ ПРЕВЬЮ (IMGUI)</span>
+                <span>🖥️ ПРЕВЬЮ</span>
                 <span id="previewStatus">live</span>
             </div>
             <div class="preview-frame-wrapper">
-                <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+                <iframe id="preview-iframe" sandbox="allow-scripts"></iframe>
             </div>
         </div>
     </div>
 
     <script>
         (function() {
-            // DOM refs
             const editor = document.getElementById('codeEditor');
             const iframe = document.getElementById('preview-iframe');
             const statusBadge = document.getElementById('statusBadge');
@@ -336,40 +244,33 @@
             const saveBtn = document.getElementById('saveBtn');
             const applyBtn = document.getElementById('applyBtn');
 
-            // ====== 1. Обновление превью ======
             function renderPreview() {
                 const code = editor.value;
-                // Очищаем iframe и пишем новый HTML
                 const doc = iframe.contentDocument || iframe.contentWindow.document;
-                doc.open();
-                // Пишем код пользователя как есть, но оборачиваем в базовую структуру, если там нет <html>
-                // Умная обёртка: если код выглядит как полноценный HTML — используем как есть.
-                // Иначе — вставляем в тело.
+
                 let fullHtml = code;
-                // Проверяем наличие <html> или <body> — если нет, оборачиваем
                 const trimmed = code.trim();
-                if (!/<!DOCTYPE/i.test(trimmed) && !/<html/i.test(trimmed) && !/<body/i.test(trimmed)) {
-                    // это фрагмент — оборачиваем
+
+                if (!/<!DOCTYPE/i.test(trimmed) && !/<html/i.test(trimmed)) {
                     fullHtml = `<!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"><title>IMGUI Preview</title>
-        <style>body { margin: 0; padding: 16px; background: #12121f; color: #e0e0f0; font-family: system-ui, sans-serif; }</style>
-        </head>
-        <body>
-        ${code}
-        </body>
-        </html>`;
-                } else {
-                    // если есть html/body — вставляем как есть, но подставим базовый стиль для body, если нет
-                    if (!/<style/i.test(fullHtml) && !/background/i.test(fullHtml)) {
-                        // добавим минимальный сброс
-                        fullHtml = fullHtml.replace(/<body/i, '<body style="margin:0; padding:16px; background:#12121f; color:#e0e0f0; font-family:system-ui;">');
-                    }
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Preview</title>
+    <style>
+        body { margin: 0; padding: 16px; background: #12121f; color: #e0e0f0; font-family: system-ui, sans-serif; }
+    </style>
+</head>
+<body>
+${code}
+</body>
+</html>`;
                 }
+
+                doc.open();
                 doc.write(fullHtml);
                 doc.close();
 
-                // Обновляем статус
                 statusBadge.textContent = '✅ обновлено';
                 previewStatus.textContent = '🔄 обновлено';
                 setTimeout(() => {
@@ -377,11 +278,9 @@
                     previewStatus.textContent = 'live';
                 }, 1200);
 
-                // Обновляем счётчик символов
                 charCount.textContent = code.length + ' симв.';
             }
 
-            // ====== 2. Загрузка файла ======
             function loadFile(file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -390,19 +289,12 @@
                     statusBadge.textContent = '📂 загружено';
                     setTimeout(() => statusBadge.textContent = '⚡ готово', 1500);
                 };
-                reader.onerror = function() {
-                    alert('Ошибка чтения файла');
-                };
                 reader.readAsText(file);
             }
 
-            // ====== 3. Выгрузка (скачать) ======
             function downloadCode() {
                 const code = editor.value;
-                if (!code.trim()) {
-                    alert('Нет кода для выгрузки');
-                    return;
-                }
+                if (!code.trim()) return;
                 const blob = new Blob([code], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -412,16 +304,10 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                statusBadge.textContent = '💾 скачан';
-                setTimeout(() => statusBadge.textContent = '⚡ готово', 1500);
             }
 
-            // ====== 4. События ======
-
-            // Применить (кнопка или Ctrl+Enter)
             applyBtn.addEventListener('click', renderPreview);
 
-            // Горячая клавиша Ctrl+Enter
             editor.addEventListener('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                     e.preventDefault();
@@ -429,66 +315,19 @@
                 }
             });
 
-            // Загрузка через кнопку
-            loadBtn.addEventListener('click', function() {
-                fileInput.click();
+            loadBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) loadFile(this.files[0]);
+                this.value = '';
             });
 
-            fileInput.addEventListener('change', function(e) {
-                if (this.files && this.files.length > 0) {
-                    loadFile(this.files[0]);
-                }
-                this.value = ''; // сброс, чтобы можно было загрузить тот же файл повторно
-            });
-
-            // Выгрузка
             saveBtn.addEventListener('click', downloadCode);
 
-            // Синхронизация счётчика при вводе
             editor.addEventListener('input', function() {
                 charCount.textContent = this.value.length + ' симв.';
             });
 
-            // Также обновляем превью при первом запуске
-            window.addEventListener('load', function() {
-                renderPreview();
-                // Дополнительно: небольшой автофокус
-                editor.focus();
-            });
-
-            // Если изменить размер окна — перерисовывать не нужно, но можно обновить iframe при ресайзе (опционально)
-            // Небольшой трюк: если iframe не отображается корректно, можно перерендерить
-            let resizeTimer;
-            window.addEventListener('resize', function() {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    // мягко обновим превью, чтобы iframe подстроился
-                    renderPreview();
-                }, 300);
-            });
-
-            // ====== 5. Drag & Drop для файлов (приятный бонус) ======
-            document.addEventListener('dragover', function(e) {
-                e.preventDefault();
-            });
-            document.addEventListener('drop', function(e) {
-                e.preventDefault();
-                const files = e.dataTransfer.files;
-                if (files && files.length > 0) {
-                    const f = files[0];
-                    // Проверяем расширение (текстовые файлы)
-                    const ext = f.name.split('.').pop().toLowerCase();
-                    const textExts = ['html', 'htm', 'txt', 'js', 'css', 'json', 'xml', 'svg', 'lua', 'py', 'c', 'cpp', 'java', 'csv', 'md', 'rss', 'atom'];
-                    if (textExts.includes(ext) || f.type.startsWith('text/')) {
-                        loadFile(f);
-                    } else {
-                        alert('Пожалуйста, загрузите текстовый файл (html, txt, css, js, ...)');
-                    }
-                }
-            });
-
-            // Дополнительно: подсказка в статусе при загрузке через дроп
-            console.log('IMGUI Studio готов. Перетащите файл в окно браузера для загрузки.');
+            window.addEventListener('load', renderPreview);
         })();
     </script>
 </body>
