@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ImGui Style Live Editor · C++</title>
+  <title>ImGui Live Editor · C++ Style + UI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -126,6 +126,7 @@
       gap: 16px;
       flex-shrink: 0;
       align-items: center;
+      flex-wrap: wrap;
     }
     .action-bar button {
       background: #2b5278;
@@ -144,6 +145,12 @@
     .action-bar .hint {
       color: #666;
       font-size: 12px;
+    }
+    .action-bar .hint code {
+      background: #252530;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #aaa;
     }
 
     @media (max-width: 768px) {
@@ -164,17 +171,78 @@
 <body>
 
   <div class="toolbar">
-    <span>🎨 Dear ImGui · Live Style Editor</span>
-    <span>⚡ C++ Style & Palette Editor</span>
+    <span>🎨 Dear ImGui · Live Editor (C++ Style + UI)</span>
+    <span>⚡ Интерактивный редактор</span>
   </div>
 
   <div class="split-container">
     <div class="code-panel">
       <div class="header">
-        <span>📄 <strong>C++ Функция Стилей</strong> (ImGuiStyle)</span>
-        <span class="lang">C++</span>
+        <span>📄 <strong>Код интерфейса</strong> (HTML + C++ стили)</span>
+        <span class="lang">HTML + C++</span>
       </div>
-      <textarea id="codeEditor" spellcheck="false" autofocus>static void StyleDarkBlue() {
+      <textarea id="codeEditor" spellcheck="false" autofocus>&lt;!-- HTML-разметка интерфейса (можно менять полностью) --&gt;
+&lt;div class="imgui-window" id="mainWindow"&gt;
+  &lt;div class="imgui-titlebar" id="titleBar"&gt;
+    &lt;span&gt;🎮 Меню читов&lt;/span&gt;
+    &lt;span style="color:var(--col-TextDisabled, #666); cursor:pointer;"&gt;✕&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;div class="imgui-tabs"&gt;
+    &lt;div class="imgui-tab active" data-tab="aim"&gt;Аимбот&lt;/div&gt;
+    &lt;div class="imgui-tab" data-tab="visual"&gt;Визуал&lt;/div&gt;
+    &lt;div class="imgui-tab" data-tab="settings"&gt;Настройки&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="imgui-child" id="tabContent"&gt;
+    &lt;!-- Содержимое вкладок --&gt;
+    &lt;div class="tab-pane active" id="pane-aim"&gt;
+      &lt;div class="imgui-item imgui-checkbox"&gt;
+        &lt;div class="imgui-check-box checked"&gt;&lt;/div&gt;
+        &lt;span&gt;Включить Aimbot&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="imgui-item imgui-slider-container"&gt;
+        &lt;span style="width:70px;"&gt;FOV:&lt;/span&gt;
+        &lt;div class="imgui-slider-track"&gt;
+          &lt;div class="imgui-slider-grab" style="left:65%;"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="imgui-item"&gt;
+        &lt;input type="text" class="imgui-input" value="Бинд: MOUSE5" readonly /&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="tab-pane" id="pane-visual" style="display:none;"&gt;
+      &lt;div class="imgui-item imgui-checkbox"&gt;
+        &lt;div class="imgui-check-box checked"&gt;&lt;/div&gt;
+        &lt;span&gt;Wallhack (X-Ray)&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="imgui-item imgui-checkbox"&gt;
+        &lt;div class="imgui-check-box"&gt;&lt;/div&gt;
+        &lt;span&gt;Радар (ESP)&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class="tab-pane" id="pane-settings" style="display:none;"&gt;
+      &lt;div class="imgui-item"&gt;
+        &lt;label&gt;Язык&lt;/label&gt;
+        &lt;select class="imgui-input" style="margin-top:4px;"&gt;
+          &lt;option&gt;Русский&lt;/option&gt;
+          &lt;option&gt;English&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div style="display:flex; justify-content:space-between; margin-top:12px;"&gt;
+    &lt;button class="imgui-btn"&gt;Сохранить&lt;/button&gt;
+    &lt;button class="imgui-btn" style="background:var(--col-Header, #28426b)"&gt;Сброс&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- ===== Стили C++ (ImGuiStyle) ===== --&gt;
+&lt;style id="cppStyles"&gt;
+static void StyleDarkBlue() {
     ImGuiStyle &style = ImGui::GetStyle();
 
     // === Скругления углов ===
@@ -204,48 +272,43 @@
     colors[ImGuiCol_PopupBg]               = ImVec4(0.10f, 0.11f, 0.13f, 0.98f);
     colors[ImGuiCol_Border]                = ImVec4(0.20f, 0.25f, 0.35f, 0.60f);
     
-    // Заголовки (Headers)
     colors[ImGuiCol_Header]                = ImVec4(0.16f, 0.26f, 0.42f, 0.85f);
     colors[ImGuiCol_HeaderHovered]         = ImVec4(0.22f, 0.38f, 0.62f, 0.90f);
     colors[ImGuiCol_HeaderActive]          = ImVec4(0.14f, 0.45f, 0.80f, 1.00f);
 
-    // Фреймы (Поля ввода, чекбоксы)
     colors[ImGuiCol_FrameBg]               = ImVec4(0.14f, 0.16f, 0.21f, 1.00f);
     colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.19f, 0.23f, 0.32f, 1.00f);
     colors[ImGuiCol_FrameBgActive]         = ImVec4(0.16f, 0.28f, 0.45f, 1.00f);
 
-    // Кнопки
     colors[ImGuiCol_Button]                = ImVec4(0.16f, 0.29f, 0.48f, 1.00f);
     colors[ImGuiCol_ButtonHovered]         = ImVec4(0.22f, 0.40f, 0.66f, 1.00f);
     colors[ImGuiCol_ButtonActive]          = ImVec4(0.14f, 0.48f, 0.85f, 1.00f);
 
-    // Вкладки (Tabs)
     colors[ImGuiCol_Tab]                   = ImVec4(0.12f, 0.15f, 0.22f, 1.00f);
     colors[ImGuiCol_TabHovered]            = ImVec4(0.22f, 0.40f, 0.66f, 1.00f);
     colors[ImGuiCol_TabActive]             = ImVec4(0.18f, 0.34f, 0.56f, 1.00f);
 
-    // Ползунки
     colors[ImGuiCol_SliderGrab]            = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
     colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.30f, 0.60f, 1.00f, 1.00f);
     
-    // Заголовок окна
     colors[ImGuiCol_TitleBg]               = ImVec4(0.08f, 0.09f, 0.11f, 1.00f);
     colors[ImGuiCol_TitleBgActive]         = ImVec4(0.12f, 0.20f, 0.35f, 1.00f);
-}</textarea>
+}
+&lt;/style&gt;</textarea>
     </div>
 
     <div class="preview-panel">
       <div class="header">
-        <span>🖥️ <strong>Предпросмотр темы</strong></span>
-        <span class="status">● рендеринг в реальном времени</span>
+        <span>🖥️ <strong>Предпросмотр (интерактивный)</strong></span>
+        <span class="status">● живой рендеринг</span>
       </div>
       <iframe id="previewFrame"></iframe>
     </div>
   </div>
 
   <div class="action-bar">
-    <button id="applyCodeBtn">⟳ Применить стиль</button>
-    <span class="hint">Изменения в `style.*` и `colors[...]` обновляются без перезагрузки фрейма</span>
+    <button id="applyCodeBtn">⟳ Применить изменения</button>
+    <span class="hint">Редактируйте <code>HTML</code> и <code>C++ стили</code> — интерфейс обновится автоматически</span>
   </div>
 
   <script>
@@ -253,14 +316,19 @@
       const editor = document.getElementById('codeEditor');
       const previewFrame = document.getElementById('previewFrame');
       let debounceTimer = null;
+      let isDragging = false;
+      let dragOffsetX = 0, dragOffsetY = 0;
 
-      const baseFrameHTML = `<!DOCTYPE html>
+      // Базовый HTML для iframe (обёртка + скрипты для интерактивности)
+      function getFrameTemplate(htmlContent) {
+        return `
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <style id="dynamicStyles"></style>
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; user-select: none; }
     body { 
       margin: 0; 
       background: #09090b; 
@@ -271,16 +339,25 @@
       font-family: system-ui, -apple-system, sans-serif;
       padding: 20px;
       color: var(--col-Text, #fff);
+      transition: background 0.2s;
     }
 
+    /* Базовые стили для ImGui-подобных элементов */
     .imgui-window {
       background: var(--col-WindowBg, #17191e);
       border-radius: var(--WindowRounding, 8px);
       border: var(--WindowBorderSize, 1px) solid var(--col-Border, transparent);
       padding: var(--WindowPadding-Y, 12px) var(--WindowPadding-X, 12px);
-      width: 340px;
+      width: 360px;
+      max-width: 90vw;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       font-size: 13px;
+      position: relative;
+      cursor: default;
+      transition: box-shadow 0.2s;
+    }
+    .imgui-window:hover {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7);
     }
 
     .imgui-titlebar {
@@ -294,6 +371,11 @@
       display: flex;
       justify-content: space-between;
       border-bottom: 1px solid var(--col-Border, transparent);
+      cursor: grab;
+      user-select: none;
+    }
+    .imgui-titlebar:active {
+      cursor: grabbing;
     }
 
     .imgui-child {
@@ -318,12 +400,20 @@
       border-top-right-radius: var(--TabRounding, 4px);
       color: var(--col-TextDisabled, #808c99);
       font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
     }
-    
+    .imgui-tab:hover {
+      background: var(--col-TabHovered, #2e4060);
+      color: var(--col-Text, #fff);
+    }
     .imgui-tab.active {
       background: var(--col-TabActive, #2e568f);
       color: var(--col-Text, #fff);
     }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
 
     .imgui-item {
       margin-bottom: var(--ItemSpacing-Y, 8px);
@@ -337,6 +427,11 @@
       color: var(--col-Text, #fff);
       width: 100%;
       outline: none;
+      transition: 0.15s;
+    }
+    .imgui-input:focus {
+      background: var(--col-FrameBgActive, #2a3a55);
+      box-shadow: 0 0 0 2px var(--col-Button, #284a7a);
     }
 
     .imgui-slider-container {
@@ -351,6 +446,7 @@
       background: var(--col-FrameBg, #232835);
       border-radius: var(--FrameRounding, 4px);
       position: relative;
+      cursor: pointer;
     }
 
     .imgui-slider-grab {
@@ -360,6 +456,12 @@
       border-radius: var(--GrabRounding, 4px);
       position: absolute;
       left: 40%;
+      transition: 0.1s;
+      cursor: grab;
+    }
+    .imgui-slider-grab:active {
+      cursor: grabbing;
+      background: var(--col-SliderGrabActive, #4ae0ff);
     }
 
     .imgui-btn {
@@ -370,70 +472,187 @@
       border: none;
       font-size: 12px;
       cursor: pointer;
+      transition: 0.15s;
+    }
+    .imgui-btn:hover {
+      background: var(--col-ButtonHovered, #3a6aa0);
+    }
+    .imgui-btn:active {
+      background: var(--col-ButtonActive, #4a8acc);
     }
 
     .imgui-checkbox {
       display: flex;
       align-items: center;
       gap: var(--ItemInnerSpacing-X, 6px);
+      cursor: pointer;
     }
 
     .imgui-check-box {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       background: var(--col-FrameBg, #232835);
       border-radius: var(--FrameRounding, 4px);
       position: relative;
+      flex-shrink: 0;
+      transition: 0.15s;
+      cursor: pointer;
+    }
+    .imgui-check-box:hover {
+      background: var(--col-FrameBgHovered, #2a3345);
     }
     .imgui-check-box.checked::after {
       content: '';
       position: absolute;
       left: 4px; top: 1px;
-      width: 3px; height: 7px;
+      width: 4px; height: 8px;
       border: solid var(--col-Text, #fff);
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
     }
+    .imgui-check-box.checked {
+      background: var(--col-Button, #284a7a);
+    }
   </style>
 </head>
 <body>
-  <div class="imgui-window">
-    <div class="imgui-titlebar">
-      <span>Пример меню (ImGui Theme)</span>
-      <span style="color:var(--col-TextDisabled, #666)">✕</span>
-    </div>
+  <!-- Пользовательский HTML вставляется сюда -->
+  ${htmlContent}
 
-    <div class="imgui-tabs">
-      <div class="imgui-tab active">Аимбот</div>
-      <div class="imgui-tab">Валхак</div>
-      <div class="imgui-tab">Настройки</div>
-    </div>
+  <script>
+    // === Интерактивность (внутри iframe) ===
+    (function() {
+      // Перетаскивание окна
+      const win = document.getElementById('mainWindow');
+      const titleBar = document.getElementById('titleBar');
+      let isDragging = false;
+      let offsetX = 0, offsetY = 0;
 
-    <div class="imgui-child">
-      <div class="imgui-item imgui-checkbox">
-        <div class="imgui-check-box checked"></div>
-        <span>Включить Aimbot</span>
-      </div>
-      <div class="imgui-item imgui-slider-container">
-        <span style="width:70px;">FOV:</span>
-        <div class="imgui-slider-track">
-          <div class="imgui-slider-grab"></div>
-        </div>
-      </div>
-    </div>
+      if (titleBar && win) {
+        titleBar.addEventListener('mousedown', (e) => {
+          if (e.target.closest('.imgui-titlebar span:last-child')) return;
+          isDragging = true;
+          const rect = win.getBoundingClientRect();
+          offsetX = e.clientX - rect.left;
+          offsetY = e.clientY - rect.top;
+          win.style.position = 'fixed';
+          win.style.left = rect.left + 'px';
+          win.style.top = rect.top + 'px';
+          win.style.margin = '0';
+          win.style.cursor = 'grabbing';
+          document.body.style.cursor = 'grabbing';
+          e.preventDefault();
+        });
 
-    <div class="imgui-item">
-      <input type="text" class="imgui-input" value="Бинд клавиши: MOUSE5" readonly />
-    </div>
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          let x = e.clientX - offsetX;
+          let y = e.clientY - offsetY;
+          // Ограничиваем, чтобы окно не уходило за экран
+          x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
+          y = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, y));
+          win.style.left = x + 'px';
+          win.style.top = y + 'px';
+        });
 
-    <div style="display:flex; justify-content:space-between; margin-top:12px;">
-      <button class="imgui-btn">Сохранить</button>
-      <button class="imgui-btn" style="background:var(--col-Header, #28426b)">Сброс</button>
-    </div>
-  </div>
+        document.addEventListener('mouseup', () => {
+          if (isDragging) {
+            isDragging = false;
+            win.style.cursor = 'default';
+            document.body.style.cursor = 'default';
+          }
+        });
+      }
+
+      // Переключение вкладок
+      document.querySelectorAll('.imgui-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          const tabId = this.dataset.tab;
+          if (!tabId) return;
+          
+          // Убираем active у всех вкладок и панелей
+          document.querySelectorAll('.imgui-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          
+          this.classList.add('active');
+          const pane = document.getElementById('pane-' + tabId);
+          if (pane) pane.classList.add('active');
+        });
+      });
+
+      // Переключение чекбоксов
+      document.querySelectorAll('.imgui-checkbox').forEach(item => {
+        const box = item.querySelector('.imgui-check-box');
+        if (box) {
+          item.addEventListener('click', function(e) {
+            if (e.target.closest('.imgui-check-box')) {
+              box.classList.toggle('checked');
+            }
+          });
+        }
+      });
+
+      // Слайдеры (перетаскивание ползунка)
+      document.querySelectorAll('.imgui-slider-track').forEach(track => {
+        const grab = track.querySelector('.imgui-slider-grab');
+        if (!grab) return;
+        let isDraggingSlider = false;
+
+        track.addEventListener('mousedown', (e) => {
+          isDraggingSlider = true;
+          const rect = track.getBoundingClientRect();
+          let percent = (e.clientX - rect.left) / rect.width;
+          percent = Math.max(0, Math.min(1, percent));
+          grab.style.left = (percent * 100) + '%';
+          e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDraggingSlider) return;
+          const rect = track.getBoundingClientRect();
+          let percent = (e.clientX - rect.left) / rect.width;
+          percent = Math.max(0, Math.min(1, percent));
+          grab.style.left = (percent * 100) + '%';
+        });
+
+        document.addEventListener('mouseup', () => {
+          isDraggingSlider = false;
+        });
+      });
+
+      // Кнопки (обратная связь)
+      document.querySelectorAll('.imgui-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const originalText = this.textContent;
+          this.textContent = '✓ Готово';
+          setTimeout(() => {
+            this.textContent = originalText;
+          }, 800);
+        });
+      });
+
+      // Закрытие окна (крестик)
+      const closeBtn = document.querySelector('.imgui-titlebar span:last-child');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          const win = document.getElementById('mainWindow');
+          if (win) {
+            win.style.transition = 'opacity 0.3s, transform 0.3s';
+            win.style.opacity = '0';
+            win.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+              win.style.display = 'none';
+            }, 300);
+          }
+        });
+      }
+    })();
+  <\/script>
 </body>
 </html>`;
+      }
 
+      // Парсинг C++ кода в CSS-переменные
       function parseCppToCSS(code) {
         let cssVars = ':root {\n';
         const lines = code.split('\n');
@@ -469,20 +688,50 @@
         const frameDoc = previewFrame.contentDocument || (previewFrame.contentWindow && previewFrame.contentWindow.document);
         if (!frameDoc) return;
 
-        const styleElement = frameDoc.getElementById('dynamicStyles');
-        if (styleElement) {
-          styleElement.textContent = parseCppToCSS(editor.value);
+        const fullCode = editor.value;
+        
+        // Извлекаем HTML (всё что до тега <style id="cppStyles">)
+        let htmlPart = fullCode;
+        let cppPart = '';
+        
+        const styleTagMatch = fullCode.match(/<style\s+id="cppStyles">([\s\S]*?)<\/style>/);
+        if (styleTagMatch) {
+          cppPart = styleTagMatch[1];
+          htmlPart = fullCode.replace(/<style\s+id="cppStyles">[\s\S]*?<\/style>/, '').trim();
         }
+
+        // Извлекаем HTML-содержимое (то что внутри body)
+        const bodyMatch = htmlPart.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        let bodyHTML = htmlPart;
+        if (bodyMatch) {
+          bodyHTML = bodyMatch[1];
+        }
+
+        // Обновляем iframe
+        const frameHTML = getFrameTemplate(bodyHTML);
+        previewFrame.srcdoc = frameHTML;
+
+        // После загрузки применяем стили
+        previewFrame.addEventListener('load', function onLoad() {
+          previewFrame.removeEventListener('load', onLoad);
+          const doc = previewFrame.contentDocument || previewFrame.contentWindow?.document;
+          if (doc) {
+            const styleEl = doc.getElementById('dynamicStyles');
+            if (styleEl) {
+              styleEl.textContent = parseCppToCSS(cppPart);
+            }
+          }
+        });
       }
 
       function initIframe() {
-        previewFrame.srcdoc = baseFrameHTML;
-        previewFrame.addEventListener('load', updateTheme, { once: true });
+        updateTheme();
       }
 
+      // Автоматическое обновление при вводе
       editor.addEventListener('input', function() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(updateTheme, 150);
+        debounceTimer = setTimeout(updateTheme, 400);
       });
 
       document.getElementById('applyCodeBtn').addEventListener('click', updateTheme);
@@ -495,4 +744,4 @@
     })();
   </script>
 </body>
-</html>
+  </html>
