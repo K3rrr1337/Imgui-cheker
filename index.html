@@ -252,65 +252,7 @@ ImGui::End();</textarea>
         <span>🖥️ <strong>предпросмотр</strong> (ImGui)</span>
         <span class="status">● живой рендеринг</span>
       </div>
-      <iframe id="previewFrame" srcdoc="
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset='utf-8'>
-          <style>
-            body { margin:0; background:#1c1c1c; display:flex; align-items:center; justify-content:center; height:100vh; font-family:system-ui; }
-            .imgui-window { background:#2a2a2a; border-radius:12px; padding:24px 28px; min-width:320px; max-width:90%; box-shadow:0 12px 40px rgba(0,0,0,0.7); border:1px solid #4a4a4a; color:#ddd; }
-            .imgui-window h2 { margin:0 0 12px 0; font-weight:400; font-size:20px; color:#eee; letter-spacing:0.3px; border-bottom:1px solid #3a3a3a; padding-bottom:8px; }
-            .imgui-tab-bar { display:flex; gap:4px; margin:8px 0 16px 0; border-bottom:1px solid #3a3a3a; }
-            .imgui-tab { padding:6px 16px; border-radius:6px 6px 0 0; background:#333; color:#aaa; cursor:default; border:1px solid #3a3a3a; border-bottom:none; }
-            .imgui-tab.active { background:#3a5a7a; color:#fff; border-color:#4a7a9a; }
-            .imgui-content { padding:8px 0; }
-            .imgui-text { margin:6px 0; }
-            .imgui-slider { display:flex; align-items:center; gap:12px; margin:10px 0; }
-            .imgui-slider input { width:100%; background:#3a3a3a; height:4px; border-radius:4px; accent-color:#6a9acf; }
-            .imgui-slider span { min-width:40px; color:#ccc; }
-            .imgui-check { display:flex; align-items:center; gap:8px; margin:6px 0; }
-            .imgui-check input { accent-color:#6a9acf; width:16px; height:16px; }
-            .imgui-radio-group { margin:6px 0; display:flex; gap:12px; flex-wrap:wrap; }
-            .imgui-radio-group label { display:flex; align-items:center; gap:4px; }
-            .imgui-btn { background:#3a5a7a; border:none; color:white; padding:6px 18px; border-radius:20px; margin-top:12px; cursor:default; }
-            .imgui-btn:hover { background:#4a7a9a; }
-            .imgui-footer { margin-top:16px; font-size:12px; color:#666; border-top:1px solid #2a2a2a; padding-top:10px; text-align:center; }
-          </style>
-        </head>
-        <body>
-          <div class='imgui-window'>
-            <h2>⚙️ Меню (дефолтный вид)</h2>
-            <div class='imgui-tab-bar'>
-              <div class='imgui-tab active'>Настройки</div>
-              <div class='imgui-tab'>Эффекты</div>
-              <div class='imgui-tab'>Инфо</div>
-            </div>
-            <div class='imgui-content'>
-              <div class='imgui-text'>Параметры окна</div>
-              <div class='imgui-slider'>
-                <span>Прозрачность</span>
-                <input type='range' min='0' max='1' step='0.01' value='0.5'>
-                <span>0.50</span>
-              </div>
-              <div class='imgui-check'>
-                <input type='checkbox' checked> <span>Включить тень</span>
-              </div>
-              <div style='margin-top:12px; border-top:1px solid #2a2a2a; padding-top:12px;'>
-                <div class='imgui-text' style='color:#aaa;'>Эффекты пост-обработки</div>
-                <div class='imgui-radio-group'>
-                  <label><input type='radio' name='effect' checked> None</label>
-                  <label><input type='radio' name='effect'> Blur</label>
-                  <label><input type='radio' name='effect'> Glow</label>
-                </div>
-              </div>
-              <button class='imgui-btn'>Применить</button>
-            </div>
-            <div class='imgui-footer'>ImGui 1.90 · C++ live preview</div>
-          </div>
-        </body>
-        </html>
-      "></iframe>
+      <iframe id="previewFrame"></iframe>
     </div>
   </div>
 
@@ -324,14 +266,23 @@ ImGui::End();</textarea>
     (function() {
       const editor = document.getElementById('codeEditor');
       const previewFrame = document.getElementById('previewFrame');
+      let debounceTimer = null;
 
-      // --- парсинг "C++ кода" и превращение в минимальный HTML рендеринг ImGui ---
+      // Экранирование спецсимволов HTML для предотвращения инъекций и ошибок
+      function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+      }
+
       function generatePreviewFromCode(code) {
-        // Базовый HTML с обёрткой, поверх которой накладываем наши "виджеты"
-        // Используем упрощённый парсинг: ищем ключевые слова ImGui и рисуем примитивы.
-        // Это демо-пример, который показывает как код влияет на визуал.
-        // Поддерживаются: Begin, End, BeginTabBar, BeginTabItem, EndTabBar, EndTabItem,
-        // Text, SliderFloat, Checkbox, RadioButton, Button
+        let titleName = "⚙️ Меню";
+        const titleMatch = code.match(/ImGui::Begin\s*\(\s*["']([^"']+)["']/);
+        if (titleMatch) {
+          titleName = escapeHtml(titleMatch[1]);
+        }
 
         let html = `
         <!DOCTYPE html>
@@ -339,7 +290,7 @@ ImGui::End();</textarea>
         <head>
           <meta charset="utf-8">
           <style>
-            body { margin:0; background:#1c1c1c; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:system-ui, sans-serif; padding:16px; }
+            body { margin:0; background:#1c1c1c; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:system-ui, sans-serif; padding:16px; box-sizing:border-box; }
             .imgui-window { background:#2a2a2a; border-radius:12px; padding:20px 24px; min-width:300px; max-width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.7); border:1px solid #4a4a4a; color:#ddd; width:fit-content; margin:auto; }
             .imgui-window h2 { margin:0 0 8px 0; font-weight:400; font-size:20px; color:#eee; border-bottom:1px solid #3a3a3a; padding-bottom:6px; }
             .imgui-tab-bar { display:flex; gap:4px; margin:8px 0 12px 0; border-bottom:1px solid #3a3a3a; flex-wrap:wrap; }
@@ -357,135 +308,84 @@ ImGui::End();</textarea>
             .imgui-btn { background:#3a5a7a; border:none; color:white; padding:4px 18px; border-radius:20px; margin-top:8px; cursor:default; font-size:14px; }
             .imgui-btn:hover { background:#4a7a9a; }
             .imgui-footer { margin-top:12px; font-size:12px; color:#666; border-top:1px solid #2a2a2a; padding-top:8px; text-align:center; }
-            .imgui-separator { border-top:1px solid #2a2a2a; margin:8px 0; }
           </style>
         </head>
         <body>
           <div class="imgui-window">
-            <h2>⚙️ Меню</h2>
+            <h2>${titleName}</h2>
         `;
 
-        // Парсим код построчно (очень упрощённо)
         const lines = code.split('\n');
-        let inTabBar = false;
-        let activeTab = null;
         let tabItems = [];
-        let insideTabItem = false;
-        let currentTabLabel = '';
         let contentHtml = '';
-        let hasContent = false;
 
-        // Функция для добавления содержимого в текущий таб или в общий контент
-        function appendContent(str) {
-          if (insideTabItem) {
-            contentHtml += str;
-          } else {
-            // если не внутри таба, добавляем в основной блок (но для демо просто добавим)
-            contentHtml += str;
-          }
-          hasContent = true;
-        }
-
-        // Простейший парсер
         for (let line of lines) {
           const trimmed = line.trim();
-          if (!trimmed) continue;
+          if (!trimmed || trimmed.startsWith('//')) continue;
 
-          // Проверяем BeginTabBar
-          if (trimmed.includes('BeginTabBar')) {
-            inTabBar = true;
-            continue;
-          }
-          if (trimmed.includes('EndTabBar')) {
-            inTabBar = false;
-            // закрываем таббар
-            continue;
-          }
-
-          // BeginTabItem
           if (trimmed.includes('BeginTabItem')) {
             const match = trimmed.match(/BeginTabItem\s*\(\s*["']([^"']+)["']/);
-            if (match) {
-              currentTabLabel = match[1];
-              insideTabItem = true;
-              // добавляем таб в бар (если ещё не добавлен)
-              if (!tabItems.includes(currentTabLabel)) {
-                tabItems.push(currentTabLabel);
-              }
+            if (match && !tabItems.includes(match[1])) {
+              tabItems.push(escapeHtml(match[1]));
             }
             continue;
           }
-          if (trimmed.includes('EndTabItem')) {
-            insideTabItem = false;
-            continue;
-          }
 
-          // Обработка виджетов
-          if (trimmed.includes('Text')) {
+          if (trimmed.includes('ImGui::Text')) {
             const match = trimmed.match(/Text\s*\(\s*["']([^"']+)["']/);
             if (match) {
-              appendContent(`<div class="imgui-text">${match[1]}</div>`);
+              contentHtml += `<div class="imgui-text">${escapeHtml(match[1])}</div>`;
             }
             continue;
           }
 
-          if (trimmed.includes('SliderFloat')) {
+          if (trimmed.includes('ImGui::SliderFloat')) {
             const match = trimmed.match(/SliderFloat\s*\(\s*["']([^"']+)["']/);
             if (match) {
-              const label = match[1];
-              appendContent(`
+              contentHtml += `
                 <div class="imgui-slider">
-                  <span>${label}</span>
+                  <span>${escapeHtml(match[1])}</span>
                   <input type="range" min="0" max="1" step="0.01" value="0.5">
                   <span>0.50</span>
                 </div>
-              `);
+              `;
             }
             continue;
           }
 
-          if (trimmed.includes('Checkbox')) {
+          if (trimmed.includes('ImGui::Checkbox')) {
             const match = trimmed.match(/Checkbox\s*\(\s*["']([^"']+)["']/);
             if (match) {
-              const label = match[1];
-              appendContent(`
+              contentHtml += `
                 <div class="imgui-check">
-                  <input type="checkbox" checked> <span>${label}</span>
+                  <input type="checkbox" checked> <span>${escapeHtml(match[1])}</span>
                 </div>
-              `);
+              `;
             }
             continue;
           }
 
-          if (trimmed.includes('RadioButton')) {
+          if (trimmed.includes('ImGui::RadioButton')) {
             const match = trimmed.match(/RadioButton\s*\(\s*["']([^"']+)["']/);
             if (match) {
-              const label = match[1];
-              appendContent(`
+              contentHtml += `
                 <div class="imgui-radio-group">
-                  <label><input type="radio" name="effect" checked> ${label}</label>
+                  <label><input type="radio" name="effect" checked> ${escapeHtml(match[1])}</label>
                 </div>
-              `);
+              `;
             }
             continue;
           }
 
-          if (trimmed.includes('Button')) {
+          if (trimmed.includes('ImGui::Button')) {
             const match = trimmed.match(/Button\s*\(\s*["']([^"']+)["']/);
             if (match) {
-              const label = match[1];
-              appendContent(`<button class="imgui-btn">${label}</button>`);
+              contentHtml += `<button class="imgui-btn">${escapeHtml(match[1])}</button>`;
             }
             continue;
-          }
-
-          // Если встретили Begin без таба — просто заголовок окна
-          if (trimmed.includes('Begin') && !trimmed.includes('BeginTab')) {
-            // ничего не делаем, уже есть заголовок
           }
         }
 
-        // Генерируем таб-бар если есть табы
         if (tabItems.length > 0) {
           html += `<div class="imgui-tab-bar">`;
           for (let i = 0; i < tabItems.length; i++) {
@@ -495,22 +395,8 @@ ImGui::End();</textarea>
           html += `</div>`;
         }
 
-        // Добавляем содержимое (если есть)
         if (contentHtml) {
           html += `<div class="imgui-content">${contentHtml}</div>`;
-        } else {
-          // если ничего не спарсили — покажем дефолтный контент
-          html += `
-            <div class="imgui-content">
-              <div class="imgui-text">Настройки окна</div>
-              <div class="imgui-slider"><span>Прозрачность</span><input type="range" value="0.5"><span>0.50</span></div>
-              <div class="imgui-check"><input type="checkbox" checked> <span>Включить тень</span></div>
-              <div class="imgui-separator"></div>
-              <div class="imgui-text">Эффекты</div>
-              <div class="imgui-radio-group"><label><input type="radio" name="eff" checked> None</label><label><input type="radio" name="eff"> Blur</label></div>
-              <button class="imgui-btn">Применить</button>
-            </div>
-          `;
         }
 
         html += `
@@ -523,23 +409,27 @@ ImGui::End();</textarea>
         return html;
       }
 
-      // --- обновление превью ---
       function updatePreview() {
         const code = editor.value;
         const previewHtml = generatePreviewFromCode(code);
-        previewFrame.srcdoc = previewHtml;
+        
+        // Безопасное обновление документа iframe без пересоздания srcdoc
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        doc.open();
+        doc.write(previewHtml);
+        doc.close();
       }
 
-      // --- события ---
-      editor.addEventListener('input', updatePreview);
+      // Слушатель с дебаунсом 300мс
+      editor.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updatePreview, 300);
+      });
 
       document.getElementById('applyCodeBtn').addEventListener('click', updatePreview);
 
-      // инициализация
-      updatePreview();
-
-      // дополнительно: подсветка (можно было бы добавить, но для простоты оставим)
-      console.log('ImGui Live Editor готов!');
+      // Инициализация после загрузки страницы
+      window.addEventListener('DOMContentLoaded', updatePreview);
     })();
   </script>
 </body>
