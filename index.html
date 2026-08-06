@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>IMGUI Редактор / Превью</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImGui Visual Studio & Preview</title>
     <style>
         * {
             margin: 0;
@@ -12,336 +12,334 @@
         }
 
         body {
-            background: #1e1e2f;
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #0d0d14;
+            color: #c0c0d0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            color: #e0e0e0;
         }
 
-        /* ===== Верхняя панель ===== */
+        /* ===== Шапка страницы ===== */
         .toolbar {
-            background: #2d2d44;
-            padding: 8px 16px;
+            background: #181824;
+            height: 45px;
+            padding: 0 16px;
             display: flex;
-            flex-wrap: wrap;
             align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid #3f3f5a;
-            min-height: 52px;
+            justify-content: space-between;
+            border-bottom: 1px solid #2a2a3d;
             flex-shrink: 0;
         }
 
         .toolbar .title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            letter-spacing: 0.3px;
-            color: #c0c0e0;
-            margin-right: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #4a9eff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .toolbar .btn-group {
+        .toolbar .actions {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
+            gap: 10px;
         }
 
         .toolbar button {
-            background: #3b3b58;
-            border: 1px solid #4f4f6e;
-            color: #f0f0ff;
-            padding: 6px 16px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
+            background: #252538;
+            border: 1px solid #3d3d5c;
+            color: #d0d0e0;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
             cursor: pointer;
-            transition: all 0.15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            transition: all 0.15s ease;
         }
 
         .toolbar button:hover {
-            background: #4f4f72;
-            border-color: #7a7a9e;
-            transform: scale(0.97);
+            background: #32324e;
+            border-color: #565680;
+            color: #ffffff;
         }
 
-        .toolbar button:active {
-            background: #5f5f82;
-        }
-
-        .toolbar input[type="file"] {
-            display: none;
-        }
-
-        .status-badge {
-            margin-left: auto;
-            font-size: 0.75rem;
-            background: #2a2a3e;
-            padding: 4px 12px;
-            border-radius: 30px;
-            border: 1px solid #4a4a66;
-            color: #aab;
-        }
-
-        /* ===== Основной контейнер ===== */
-        .split-container {
+        /* ===== Двухколоночный макет ===== */
+        .workspace {
             display: flex;
             flex: 1;
-            height: calc(100vh - 52px);
+            height: calc(100vh - 45px);
             overflow: hidden;
         }
 
-        /* ===== Левая панель ===== */
-        .editor-panel {
-            flex: 1 1 50%;
-            background: #1a1a2a;
+        /* ===== ЛЕВАЯ СТОРОНА: Редактор кода ===== */
+        .editor-side {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            border-right: 2px solid #33334a;
-            min-width: 280px;
-            overflow: hidden;
+            background: #12121c;
+            border-right: 2px solid #202030;
+            min-width: 300px;
         }
 
-        .editor-panel .panel-header, .preview-panel .panel-header {
-            background: #25253b;
-            padding: 8px 16px;
-            font-size: 0.8rem;
+        .panel-header {
+            background: #181826;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #8a8aaa;
-            border-bottom: 1px solid #33334a;
+            letter-spacing: 0.8px;
+            color: #707090;
+            border-bottom: 1px solid #202030;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
         }
 
-        .editor-panel .panel-header span:last-child, .preview-panel .panel-header span:last-child {
-            font-size: 0.7rem;
-            background: #2e2e48;
-            padding: 2px 10px;
-            border-radius: 20px;
-        }
-
-        .editor-panel textarea {
+        #code-editor {
             flex: 1;
             width: 100%;
-            padding: 16px;
-            background: #11111f;
-            color: #d4d4f0;
+            background: #0e0e17;
+            color: #a9b7c6;
             border: none;
             outline: none;
+            padding: 16px;
+            font-family: 'Consolas', 'Fira Code', 'Monaco', monospace;
+            font-size: 13.5px;
+            line-height: 1.6;
             resize: none;
-            font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
-            font-size: 14px;
-            line-height: 1.7;
-            tab-size: 4;
             white-space: pre;
             overflow: auto;
-            box-shadow: inset 0 0 0 1px #282840;
+            tab-size: 4;
         }
 
-        .editor-panel textarea:focus {
-            box-shadow: inset 0 0 0 2px #5f5f9f;
-            background: #141425;
-        }
-
-        /* ===== Правая панель ===== */
-        .preview-panel {
-            flex: 1 1 50%;
-            background: #1c1c30;
+        /* ===== ПРАВАЯ СТОРОНА: Превью с ImGui Окном ===== */
+        .preview-side {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            min-width: 280px;
+            background: #161622;
+            min-width: 300px;
         }
 
-        .preview-frame-wrapper {
+        .preview-viewport {
             flex: 1;
-            background: #131325;
-            padding: 12px;
+            padding: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background-image: 
+                radial-gradient(#202035 1px, transparent 1px);
+            background-size: 20px 20px;
             overflow: auto;
         }
 
-        #preview-iframe {
-            width: 100%;
-            height: 100%;
-            background: #0f0f1f;
-            border: 1px solid #3a3a5a;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-            min-height: 300px;
-            min-width: 200px;
+        /* Имитация окна Dear ImGui */
+        .imgui-window {
+            width: 440px;
+            min-height: 320px;
+            background: rgba(15, 16, 21, 0.95);
+            border: 1px solid #363946;
+            border-radius: 4px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        @media (max-width: 720px) {
-            .split-container {
+        /* Шапка ImGui окна */
+        .imgui-titlebar {
+            background: #1c1e24;
+            padding: 6px 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            border-bottom: 1px solid #2a2d37;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .imgui-titlebar .controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .imgui-titlebar .btn-min {
+            width: 10px;
+            height: 10px;
+            background: #4a4d5a;
+            border-radius: 2px;
+        }
+
+        /* Поле контента ImGui, куда накладывается пользовательский код */
+        #imgui-content {
+            padding: 14px;
+            flex: 1;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 13px;
+            overflow-y: auto;
+        }
+
+        /* Адаптивность для мобильных экранов */
+        @media (max-width: 768px) {
+            .workspace {
                 flex-direction: column;
             }
-            .editor-panel {
+            .editor-side, .preview-side {
+                flex: 1;
+                min-width: 100%;
+            }
+            .editor-side {
                 border-right: none;
-                border-bottom: 2px solid #33334a;
+                border-bottom: 2px solid #202030;
             }
         }
     </style>
 </head>
 <body>
 
+    <!-- Верхняя панель -->
     <div class="toolbar">
-        <span class="title">🧩 IMGUI Studio</span>
-        <div class="btn-group">
-            <button id="loadBtn" title="Загрузить код из файла">📂 Загрузить</button>
-            <button id="saveBtn" title="Скачать текущий код">💾 Выгрузить</button>
-            <button id="applyBtn" title="Обновить превью (Ctrl+Enter)">▶ Применить</button>
-            <input type="file" id="fileInput" accept=".html,.htm,.txt,.js,.css,.lua,.cpp">
+        <div class="title">
+            <span>⚙️ ImGui Menu Designer</span>
         </div>
-        <span class="status-badge" id="statusBadge">⚡ готово</span>
+        <div class="actions">
+            <button id="resetBtn">🔄 Сбросить пример</button>
+            <button id="copyBtn">📋 Скопировать код</button>
+        </div>
     </div>
 
-    <div class="split-container">
-        <div class="editor-panel">
+    <!-- Основная рабочая область -->
+    <div class="workspace">
+
+        <!-- ЛЕВАЯ ПАНЕЛЬ: Текстовый редактор -->
+        <div class="editor-side">
             <div class="panel-header">
-                <span>📝 РЕДАКТОР КОДА</span>
-                <span id="charCount">0 симв.</span>
+                <span>Код дизайна (HTML / CSS)</span>
+                <span id="char-counter">0 символов</span>
             </div>
-            <textarea id="codeEditor" spellcheck="false" placeholder="Вставьте или напишите ваш код…"><div style="background: #2a2a4a; padding: 20px; border-radius: 16px; color: #eee; font-family: sans-serif;">
-    <h2 style="color: #b0b0ff;">Привет, IMGUI!</h2>
-    <p style="background: #1f1f3a; padding: 12px; border-radius: 8px;">
-        Это пример интерфейса. Замените код на свой.
-    </p>
-    <button style="background: #6c6cff; border: none; padding: 10px 20px; border-radius: 8px; color: white; font-weight: bold; cursor: pointer;">Нажми меня</button>
-</div></textarea>
+            <textarea id="code-editor" spellcheck="false" placeholder="Вставьте ваш HTML/CSS код для макета..."></textarea>
         </div>
 
-        <div class="preview-panel">
+        <!-- ПРАВАЯ ПАНЕЛЬ: Превью с наложенным ImGui -->
+        <div class="preview-side">
             <div class="panel-header">
-                <span>🖥️ ПРЕВЬЮ</span>
-                <span id="previewStatus">live</span>
+                <span>Интерактивное превью</span>
+                <span>Live Render</span>
             </div>
-            <div class="preview-frame-wrapper">
-                <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-forms"></iframe>
+            <div class="preview-viewport">
+                
+                <!-- Окно ImGui -->
+                <div class="imgui-window">
+                    <div class="imgui-titlebar">
+                        <span>Cheat Menu v1.0 [ImGui]</span>
+                        <div class="controls">
+                            <div class="btn-min"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Сюда динамически подгружается ваш код -->
+                    <div id="imgui-content"></div>
+                </div>
+
             </div>
         </div>
+
     </div>
 
     <script>
         (function() {
-            const editor = document.getElementById('codeEditor');
-            const iframe = document.getElementById('preview-iframe');
-            const statusBadge = document.getElementById('statusBadge');
-            const charCount = document.getElementById('charCount');
-            const previewStatus = document.getElementById('previewStatus');
+            const editor = document.getElementById('code-editor');
+            const preview = document.getElementById('imgui-content');
+            const charCounter = document.getElementById('char-counter');
+            const resetBtn = document.getElementById('resetBtn');
+            const copyBtn = document.getElementById('copyBtn');
 
-            const fileInput = document.getElementById('fileInput');
-            const loadBtn = document.getElementById('loadBtn');
-            const saveBtn = document.getElementById('saveBtn');
-            const applyBtn = document.getElementById('applyBtn');
+            // Начальный пример ImGui элементов (кнопки, чекбоксы, слайдеры, вкладки)
+            const defaultCode = `<style>
+    /* Стили элементов в стиле Dear ImGui */
+    .imgui-group { margin-bottom: 12px; }
+    .imgui-label { font-size: 11px; color: #8a8a9e; margin-bottom: 4px; text-transform: uppercase; }
+    
+    .imgui-btn {
+        background: #24497a;
+        border: 1px solid #3668a8;
+        color: #ffffff;
+        padding: 6px 14px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.1s;
+    }
+    .imgui-btn:hover { background: #315d9b; }
+    .imgui-btn:active { background: #1a3559; }
 
-            let liveTimeout;
+    .imgui-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        user-select: none;
+    }
+    .imgui-checkbox input { accent-color: #3668a8; }
 
-            function renderPreview() {
+    .imgui-slider {
+        width: 100%;
+        accent-color: #3668a8;
+        margin-top: 4px;
+    }
+</style>
+
+<div class="imgui-group">
+    <div class="imgui-label">Основные функции</div>
+    <label class="imgui-checkbox">
+        <input type="checkbox" checked> Enable ESP (Обводка игроков)
+    </label>
+    <label class="imgui-checkbox">
+        <input type="checkbox"> Aimbot (Аимасист)
+    </label>
+</div>
+
+<div class="imgui-group">
+    <div class="imgui-label">Дистанция работы: 150m</div>
+    <input type="range" class="imgui-slider" min="0" max="500" value="150">
+</div>
+
+<div class="imgui-group" style="margin-top: 15px;">
+    <button class="imgui-btn">Применить настройки</button>
+</div>`;
+
+            // Функция обновления превью
+            function updatePreview() {
                 const code = editor.value;
-                const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-                let fullHtml = code;
-                const trimmed = code.trim();
-
-                if (!/<!DOCTYPE/i.test(trimmed) && !/<html/i.test(trimmed)) {
-                    fullHtml = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Preview</title>
-    <style>
-        body { margin: 0; padding: 16px; background: #12121f; color: #e0e0f0; font-family: system-ui, sans-serif; }
-    </style>
-</head>
-<body>
-${code}
-</body>
-</html>`;
-                }
-
-                doc.open();
-                doc.write(fullHtml);
-                doc.close();
-
-                statusBadge.textContent = '✅ обновлено';
-                previewStatus.textContent = '🔄 обновлено';
-                setTimeout(() => {
-                    statusBadge.textContent = '⚡ готово';
-                    previewStatus.textContent = 'live';
-                }, 1200);
-
-                charCount.textContent = code.length + ' симв.';
+                preview.innerHTML = code;
+                charCounter.textContent = code.length + ' символов';
             }
 
-            function loadFile(file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    editor.value = e.target.result;
-                    renderPreview();
-                    statusBadge.textContent = '📂 загружено';
-                    setTimeout(() => statusBadge.textContent = '⚡ готово', 1500);
-                };
-                reader.readAsText(file);
-            }
+            // Слушатель событий ввода в редакторе
+            editor.addEventListener('input', updatePreview);
 
-            function downloadCode() {
-                const code = editor.value;
-                if (!code.trim()) return;
-                const blob = new Blob([code], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'imgui_design.html';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-
-            // Кнопка и комбинация Ctrl+Enter
-            applyBtn.addEventListener('click', renderPreview);
-            editor.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    renderPreview();
-                }
+            // Кнопка сброса к начальному коду
+            resetBtn.addEventListener('click', () => {
+                editor.value = defaultCode;
+                updatePreview();
             });
 
-            // Авто-обновление во время печати (с паузой 600мс)
-            editor.addEventListener('input', function() {
-                charCount.textContent = this.value.length + ' симв.';
-                clearTimeout(liveTimeout);
-                liveTimeout = setTimeout(renderPreview, 600);
+            // Кнопка копирования кода
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(editor.value).then(() => {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '✅ Скопировано!';
+                    setTimeout(() => copyBtn.textContent = originalText, 1500);
+                });
             });
 
-            // Загрузка / Выгрузка
-            loadBtn.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) loadFile(this.files[0]);
-                this.value = '';
-            });
-            saveBtn.addEventListener('click', downloadCode);
-
-            // Drag & Drop файла в область редактора
-            window.addEventListener('dragover', e => e.preventDefault());
-            window.addEventListener('drop', e => {
-                e.preventDefault();
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    loadFile(e.dataTransfer.files[0]);
-                }
-            });
-
-            window.addEventListener('load', renderPreview);
+            // Установка дефолтного кода при первой загрузке
+            editor.value = defaultCode;
+            updatePreview();
         })();
     </script>
 </body>
