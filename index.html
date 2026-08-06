@@ -254,7 +254,6 @@
       const previewFrame = document.getElementById('previewFrame');
       let debounceTimer = null;
 
-      // Базовый static HTML каркас для iframe (грузится строго ОДИН раз)
       const baseFrameHTML = `<!DOCTYPE html>
 <html>
 <head>
@@ -435,26 +434,22 @@
 </body>
 </html>`;
 
-      // Разбор C++ исходников в CSS-переменные
       function parseCppToCSS(code) {
         let cssVars = ':root {\n';
         const lines = code.split('\n');
 
         lines.forEach(line => {
-          // style.Rounding = X;
           const floatMatch = line.match(/style\.([A-Za-z0-9_]+)\s*=\s*([0-9.]+)/);
           if (floatMatch) {
             cssVars += `  --${floatMatch[1]}: ${floatMatch[2]}px;\n`;
           }
 
-          // style.Padding = ImVec2(X, Y);
           const vec2Match = line.match(/style\.([A-Za-z0-9_]+)\s*=\s*ImVec2\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\)/);
           if (vec2Match) {
             cssVars += `  --${vec2Match[1]}-X: ${vec2Match[2]}px;\n`;
             cssVars += `  --${vec2Match[1]}-Y: ${vec2Match[3]}px;\n`;
           }
 
-          // colors[ImGuiCol_X] = ImVec4(r, g, b, a);
           const colMatch = line.match(/colors\s*\[\s*ImGuiCol_([A-Za-z0-9_]+)\s*\]\s*=\s*ImVec4\s*\(\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*\)/);
           if (colMatch) {
             const name = colMatch[1];
@@ -480,15 +475,9 @@
         }
       }
 
-      // Однократная инициализация iframe
       function initIframe() {
-        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-        doc.open();
-        doc.write(baseFrameHTML);
-        doc.close();
-
-        // После полной загрузки DOM в iframe — сразу обновляем CSS
-        setTimeout(updateTheme, 50);
+        previewFrame.srcdoc = baseFrameHTML;
+        previewFrame.addEventListener('load', updateTheme, { once: true });
       }
 
       editor.addEventListener('input', function() {
@@ -498,7 +487,11 @@
 
       document.getElementById('applyCodeBtn').addEventListener('click', updateTheme);
 
-      window.addEventListener('load', initIframe);
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', initIframe);
+      } else {
+        initIframe();
+      }
     })();
   </script>
 </body>
