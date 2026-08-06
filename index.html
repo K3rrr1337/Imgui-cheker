@@ -200,7 +200,7 @@
             <button id="loadBtn" title="Загрузить код из файла">📂 Загрузить</button>
             <button id="saveBtn" title="Скачать текущий код">💾 Выгрузить</button>
             <button id="applyBtn" title="Обновить превью (Ctrl+Enter)">▶ Применить</button>
-            <input type="file" id="fileInput" accept=".html,.htm,.txt,.js,.css">
+            <input type="file" id="fileInput" accept=".html,.htm,.txt,.js,.css,.lua,.cpp">
         </div>
         <span class="status-badge" id="statusBadge">⚡ готово</span>
     </div>
@@ -226,7 +226,7 @@
                 <span id="previewStatus">live</span>
             </div>
             <div class="preview-frame-wrapper">
-                <iframe id="preview-iframe" sandbox="allow-scripts"></iframe>
+                <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-forms"></iframe>
             </div>
         </div>
     </div>
@@ -243,6 +243,8 @@
             const loadBtn = document.getElementById('loadBtn');
             const saveBtn = document.getElementById('saveBtn');
             const applyBtn = document.getElementById('applyBtn');
+
+            let liveTimeout;
 
             function renderPreview() {
                 const code = editor.value;
@@ -306,8 +308,8 @@ ${code}
                 URL.revokeObjectURL(url);
             }
 
+            // Кнопка и комбинация Ctrl+Enter
             applyBtn.addEventListener('click', renderPreview);
-
             editor.addEventListener('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                     e.preventDefault();
@@ -315,16 +317,28 @@ ${code}
                 }
             });
 
+            // Авто-обновление во время печати (с паузой 600мс)
+            editor.addEventListener('input', function() {
+                charCount.textContent = this.value.length + ' симв.';
+                clearTimeout(liveTimeout);
+                liveTimeout = setTimeout(renderPreview, 600);
+            });
+
+            // Загрузка / Выгрузка
             loadBtn.addEventListener('click', () => fileInput.click());
             fileInput.addEventListener('change', function() {
                 if (this.files && this.files[0]) loadFile(this.files[0]);
                 this.value = '';
             });
-
             saveBtn.addEventListener('click', downloadCode);
 
-            editor.addEventListener('input', function() {
-                charCount.textContent = this.value.length + ' симв.';
+            // Drag & Drop файла в область редактора
+            window.addEventListener('dragover', e => e.preventDefault());
+            window.addEventListener('drop', e => {
+                e.preventDefault();
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    loadFile(e.dataTransfer.files[0]);
+                }
             });
 
             window.addEventListener('load', renderPreview);
