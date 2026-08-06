@@ -193,7 +193,6 @@
     style.ItemInnerSpacing = ImVec2(6, 4);
     style.WindowBorderSize = 1.0f;
     style.FrameBorderSize = 0.0f;
-    style.ScrollbarSize = 10.0f;
 
     // === Черно-синяя палитра (Colors) ===
     ImVec4* colors = style.Colors;
@@ -224,13 +223,8 @@
     colors[ImGuiCol_Tab]                   = ImVec4(0.12f, 0.15f, 0.22f, 1.00f);
     colors[ImGuiCol_TabHovered]            = ImVec4(0.22f, 0.40f, 0.66f, 1.00f);
     colors[ImGuiCol_TabActive]             = ImVec4(0.18f, 0.34f, 0.56f, 1.00f);
-    colors[ImGuiCol_TabUnfocusedActive]    = ImVec4(0.14f, 0.24f, 0.40f, 1.00f);
 
-    // Скроллбар и Ползунки
-    colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.08f, 0.09f, 0.11f, 0.60f);
-    colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.18f, 0.26f, 0.38f, 1.00f);
-    colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.25f, 0.38f, 0.58f, 1.00f);
-    colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.20f, 0.50f, 0.85f, 1.00f);
+    // Ползунки
     colors[ImGuiCol_SliderGrab]            = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
     colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.30f, 0.60f, 1.00f, 1.00f);
     
@@ -245,13 +239,13 @@
         <span>🖥️ <strong>Предпросмотр темы</strong></span>
         <span class="status">● рендеринг в реальном времени</span>
       </div>
-      <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
+      <iframe id="previewFrame"></iframe>
     </div>
   </div>
 
   <div class="action-bar">
     <button id="applyCodeBtn">⟳ Применить стиль</button>
-    <span class="hint">Редактируйте переменные `style.*` и `colors[...]` — превью обновится автоматически</span>
+    <span class="hint">Изменения в `style.*` и `colors[...]` обновляются без перезагрузки фрейма</span>
   </div>
 
   <script>
@@ -260,84 +254,12 @@
       const previewFrame = document.getElementById('previewFrame');
       let debounceTimer = null;
 
-      function parseStyle(code) {
-        const style = {
-          WindowRounding: 8,
-          ChildRounding: 6,
-          FrameRounding: 4,
-          PopupRounding: 6,
-          ScrollbarRounding: 4,
-          GrabRounding: 4,
-          TabRounding: 4,
-          WindowPadding: [12, 12],
-          FramePadding: [8, 5],
-          ItemSpacing: [8, 8],
-          ItemInnerSpacing: [6, 4],
-          WindowBorderSize: 1,
-          FrameBorderSize: 0,
-          ScrollbarSize: 10,
-          colors: {
-            Text: 'rgba(242, 245, 250, 1.0)',
-            TextDisabled: 'rgba(128, 140, 153, 1.0)',
-            WindowBg: 'rgba(23, 25, 30, 0.98)',
-            ChildBg: 'rgba(30, 33, 40, 0.60)',
-            PopupBg: 'rgba(25, 28, 33, 0.98)',
-            Border: 'rgba(50, 64, 90, 0.60)',
-            Header: 'rgba(40, 66, 107, 0.85)',
-            HeaderHovered: 'rgba(56, 97, 158, 0.90)',
-            HeaderActive: 'rgba(35, 115, 204, 1.0)',
-            FrameBg: 'rgba(35, 40, 53, 1.0)',
-            FrameBgHovered: 'rgba(48, 58, 81, 1.0)',
-            FrameBgActive: 'rgba(40, 71, 115, 1.0)',
-            Button: 'rgba(40, 74, 122, 1.0)',
-            ButtonHovered: 'rgba(56, 102, 168, 1.0)',
-            ButtonActive: 'rgba(35, 122, 217, 1.0)',
-            Tab: 'rgba(30, 38, 56, 1.0)',
-            TabHovered: 'rgba(56, 102, 168, 1.0)',
-            TabActive: 'rgba(46, 86, 143, 1.0)',
-            ScrollbarBg: 'rgba(20, 23, 28, 0.6)',
-            ScrollbarGrab: 'rgba(46, 66, 97, 1.0)',
-            ScrollbarGrabHovered: 'rgba(64, 97, 148, 1.0)',
-            SliderGrab: 'rgba(61, 133, 224, 1.0)',
-            TitleBg: 'rgba(20, 23, 28, 1.0)',
-            TitleBgActive: 'rgba(30, 51, 89, 1.0)'
-          }
-        };
-
-        const lines = code.split('\n');
-
-        lines.forEach(line => {
-          try {
-            const floatMatch = line.match(/style\.([A-Za-z0-9_]+)\s*=\s*([0-9.]+)/);
-            if (floatMatch && style.hasOwnProperty(floatMatch[1])) {
-              style[floatMatch[1]] = parseFloat(floatMatch[2]);
-            }
-
-            const vec2Match = line.match(/style\.([A-Za-z0-9_]+)\s*=\s*ImVec2\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\)/);
-            if (vec2Match && style.hasOwnProperty(vec2Match[1])) {
-              style[vec2Match[1]] = [parseFloat(vec2Match[2]), parseFloat(vec2Match[3])];
-            }
-
-            const colMatch = line.match(/colors\s*\[\s*ImGuiCol_([A-Za-z0-9_]+)\s*\]\s*=\s*ImVec4\s*\(\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*\)/);
-            if (colMatch) {
-              const name = colMatch[1];
-              const r = Math.round(Math.min(1, Math.max(0, parseFloat(colMatch[2]))) * 255);
-              const g = Math.round(Math.min(1, Math.max(0, parseFloat(colMatch[3]))) * 255);
-              const b = Math.round(Math.min(1, Math.max(0, parseFloat(colMatch[4]))) * 255);
-              const a = Math.min(1, Math.max(0, parseFloat(colMatch[5])));
-              style.colors[name] = `rgba(${r}, ${g}, ${b}, ${a})`;
-            }
-          } catch (e) {}
-        });
-
-        return style;
-      }
-
-      function generatePreview(s) {
-        return `<!DOCTYPE html>
+      // Базовый static HTML каркас для iframe (грузится строго ОДИН раз)
+      const baseFrameHTML = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
+  <style id="dynamicStyles"></style>
   <style>
     * { box-sizing: border-box; }
     body { 
@@ -348,72 +270,72 @@
       justify-content: center; 
       min-height: 100vh; 
       font-family: system-ui, -apple-system, sans-serif;
-      color: ${s.colors.Text || '#fff'};
       padding: 20px;
+      color: var(--col-Text, #fff);
     }
 
     .imgui-window {
-      background: ${s.colors.WindowBg};
-      border-radius: ${s.WindowRounding}px;
-      border: ${s.WindowBorderSize}px solid ${s.colors.Border || 'transparent'};
-      padding: ${s.WindowPadding[1]}px ${s.WindowPadding[0]}px;
-      width: 360px;
+      background: var(--col-WindowBg, #17191e);
+      border-radius: var(--WindowRounding, 8px);
+      border: var(--WindowBorderSize, 1px) solid var(--col-Border, transparent);
+      padding: var(--WindowPadding-Y, 12px) var(--WindowPadding-X, 12px);
+      width: 340px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       font-size: 13px;
     }
 
     .imgui-titlebar {
-      background: ${s.colors.TitleBgActive || s.colors.TitleBg};
-      margin: -${s.WindowPadding[1]}px -${s.WindowPadding[0]}px ${s.WindowPadding[1]}px -${s.WindowPadding[0]}px;
+      background: var(--col-TitleBgActive, #1e3359);
+      margin: calc(-1 * var(--WindowPadding-Y, 12px)) calc(-1 * var(--WindowPadding-X, 12px)) var(--WindowPadding-Y, 12px) calc(-1 * var(--WindowPadding-X, 12px));
       padding: 6px 12px;
-      border-top-left-radius: ${s.WindowRounding}px;
-      border-top-right-radius: ${s.WindowRounding}px;
+      border-top-left-radius: var(--WindowRounding, 8px);
+      border-top-right-radius: var(--WindowRounding, 8px);
       font-weight: 600;
       font-size: 13px;
       display: flex;
       justify-content: space-between;
-      border-bottom: 1px solid ${s.colors.Border || 'transparent'};
+      border-bottom: 1px solid var(--col-Border, transparent);
     }
 
     .imgui-child {
-      background: ${s.colors.ChildBg};
-      border-radius: ${s.ChildRounding}px;
-      border: 1px solid ${s.colors.Border || 'transparent'};
+      background: var(--col-ChildBg, rgba(30, 33, 40, 0.6));
+      border-radius: var(--ChildRounding, 6px);
+      border: 1px solid var(--col-Border, transparent);
       padding: 10px;
-      margin-bottom: ${s.ItemSpacing[1]}px;
+      margin-bottom: var(--ItemSpacing-Y, 8px);
     }
 
     .imgui-tabs {
       display: flex;
       gap: 2px;
-      margin-bottom: ${s.ItemSpacing[1]}px;
-      border-bottom: 1px solid ${s.colors.Border || '#333'};
+      margin-bottom: var(--ItemSpacing-Y, 8px);
+      border-bottom: 1px solid var(--col-Border, #333);
     }
 
     .imgui-tab {
-      background: ${s.colors.Tab};
-      padding: ${s.FramePadding[1]}px ${s.FramePadding[0]}px;
-      border-top-left-radius: ${s.TabRounding}px;
-      border-top-right-radius: ${s.TabRounding}px;
-      color: ${s.colors.TextDisabled};
+      background: var(--col-Tab, #1e2638);
+      padding: var(--FramePadding-Y, 5px) var(--FramePadding-X, 8px);
+      border-top-left-radius: var(--TabRounding, 4px);
+      border-top-right-radius: var(--TabRounding, 4px);
+      color: var(--col-TextDisabled, #808c99);
       font-size: 12px;
     }
     
     .imgui-tab.active {
-      background: ${s.colors.TabActive};
-      color: ${s.colors.Text};
+      background: var(--col-TabActive, #2e568f);
+      color: var(--col-Text, #fff);
     }
 
     .imgui-item {
-      margin-bottom: ${s.ItemSpacing[1]}px;
+      margin-bottom: var(--ItemSpacing-Y, 8px);
     }
 
     .imgui-input {
-      background: ${s.colors.FrameBg};
-      border-radius: ${s.FrameRounding}px;
-      border: ${s.FrameBorderSize}px solid ${s.colors.Border || 'transparent'};
-      padding: ${s.FramePadding[1]}px ${s.FramePadding[0]}px;
-      color: ${s.colors.Text};
+      background: var(--col-FrameBg, #232835);
+      border-radius: var(--FrameRounding, 4px);
+      border: var(--FrameBorderSize, 0px) solid var(--col-Border, transparent);
+      padding: var(--FramePadding-Y, 5px) var(--FramePadding-X, 8px);
+      color: var(--col-Text, #fff);
       width: 100%;
       outline: none;
     }
@@ -421,31 +343,31 @@
     .imgui-slider-container {
       display: flex;
       align-items: center;
-      gap: ${s.ItemInnerSpacing[0]}px;
+      gap: var(--ItemInnerSpacing-X, 6px);
     }
 
     .imgui-slider-track {
       flex: 1;
       height: 12px;
-      background: ${s.colors.FrameBg};
-      border-radius: ${s.FrameRounding}px;
+      background: var(--col-FrameBg, #232835);
+      border-radius: var(--FrameRounding, 4px);
       position: relative;
     }
 
     .imgui-slider-grab {
       width: 16px;
       height: 100%;
-      background: ${s.colors.SliderGrab};
-      border-radius: ${s.GrabRounding}px;
+      background: var(--col-SliderGrab, #3dd5e0);
+      border-radius: var(--GrabRounding, 4px);
       position: absolute;
       left: 40%;
     }
 
     .imgui-btn {
-      background: ${s.colors.Button};
-      border-radius: ${s.FrameRounding}px;
-      padding: ${s.FramePadding[1]}px ${s.FramePadding[0]}px;
-      color: ${s.colors.Text};
+      background: var(--col-Button, #284a7a);
+      border-radius: var(--FrameRounding, 4px);
+      padding: var(--FramePadding-Y, 5px) var(--FramePadding-X, 8px);
+      color: var(--col-Text, #fff);
       border: none;
       font-size: 12px;
       cursor: pointer;
@@ -454,14 +376,14 @@
     .imgui-checkbox {
       display: flex;
       align-items: center;
-      gap: ${s.ItemInnerSpacing[0]}px;
+      gap: var(--ItemInnerSpacing-X, 6px);
     }
 
     .imgui-check-box {
       width: 14px;
       height: 14px;
-      background: ${s.colors.FrameBg};
-      border-radius: ${s.FrameRounding}px;
+      background: var(--col-FrameBg, #232835);
+      border-radius: var(--FrameRounding, 4px);
       position: relative;
     }
     .imgui-check-box.checked::after {
@@ -469,7 +391,7 @@
       position: absolute;
       left: 4px; top: 1px;
       width: 3px; height: 7px;
-      border: solid ${s.colors.Text};
+      border: solid var(--col-Text, #fff);
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
     }
@@ -479,7 +401,7 @@
   <div class="imgui-window">
     <div class="imgui-titlebar">
       <span>Пример меню (ImGui Theme)</span>
-      <span style="color:${s.colors.TextDisabled}">✕</span>
+      <span style="color:var(--col-TextDisabled, #666)">✕</span>
     </div>
 
     <div class="imgui-tabs">
@@ -507,27 +429,76 @@
 
     <div style="display:flex; justify-content:space-between; margin-top:12px;">
       <button class="imgui-btn">Сохранить</button>
-      <button class="imgui-btn" style="background:${s.colors.Header}">Сброс</button>
+      <button class="imgui-btn" style="background:var(--col-Header, #28426b)">Сброс</button>
     </div>
   </div>
 </body>
 </html>`;
+
+      // Разбор C++ исходников в CSS-переменные
+      function parseCppToCSS(code) {
+        let cssVars = ':root {\n';
+        const lines = code.split('\n');
+
+        lines.forEach(line => {
+          // style.Rounding = X;
+          const floatMatch = line.match(/style\.([A-Za-z0-9_]+)\s*=\s*([0-9.]+)/);
+          if (floatMatch) {
+            cssVars += `  --${floatMatch[1]}: ${floatMatch[2]}px;\n`;
+          }
+
+          // style.Padding = ImVec2(X, Y);
+          const vec2Match = line.match(/style\.([A-Za-z0-9_]+)\s*=\s*ImVec2\s*\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\)/);
+          if (vec2Match) {
+            cssVars += `  --${vec2Match[1]}-X: ${vec2Match[2]}px;\n`;
+            cssVars += `  --${vec2Match[1]}-Y: ${vec2Match[3]}px;\n`;
+          }
+
+          // colors[ImGuiCol_X] = ImVec4(r, g, b, a);
+          const colMatch = line.match(/colors\s*\[\s*ImGuiCol_([A-Za-z0-9_]+)\s*\]\s*=\s*ImVec4\s*\(\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*\)/);
+          if (colMatch) {
+            const name = colMatch[1];
+            const r = Math.round(Math.min(1, Math.max(0, parseFloat(colMatch[2]))) * 255);
+            const g = Math.round(Math.min(1, Math.max(0, parseFloat(colMatch[3]))) * 255);
+            const b = Math.round(Math.min(1, Math.max(0, parseFloat(colMatch[4]))) * 255);
+            const a = Math.min(1, Math.max(0, parseFloat(colMatch[5])));
+            cssVars += `  --col-${name}: rgba(${r}, ${g}, ${b}, ${a});\n`;
+          }
+        });
+
+        cssVars += '}';
+        return cssVars;
       }
 
-      function updatePreview() {
-        const parsedStyle = parseStyle(editor.value);
-        const previewHtml = generatePreview(parsedStyle);
-        // Без открытий потоков doc.open/write, чтобы предотвратить загрузку на GitHub Pages
-        previewFrame.srcdoc = previewHtml;
+      function updateTheme() {
+        const frameDoc = previewFrame.contentDocument || (previewFrame.contentWindow && previewFrame.contentWindow.document);
+        if (!frameDoc) return;
+
+        const styleElement = frameDoc.getElementById('dynamicStyles');
+        if (styleElement) {
+          styleElement.textContent = parseCppToCSS(editor.value);
+        }
+      }
+
+      // Однократная инициализация iframe
+      function initIframe() {
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        doc.open();
+        doc.write(baseFrameHTML);
+        doc.close();
+
+        // После полной загрузки DOM в iframe — сразу обновляем CSS
+        setTimeout(updateTheme, 50);
       }
 
       editor.addEventListener('input', function() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(updatePreview, 300);
+        debounceTimer = setTimeout(updateTheme, 150);
       });
 
-      document.getElementById('applyCodeBtn').addEventListener('click', updatePreview);
-      updatePreview();
+      document.getElementById('applyCodeBtn').addEventListener('click', updateTheme);
+
+      window.addEventListener('load', initIframe);
     })();
   </script>
 </body>
