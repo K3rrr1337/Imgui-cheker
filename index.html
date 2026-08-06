@@ -1,490 +1,546 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ImGui C++ Style Designer</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ImGui Live Editor · C++</title>
+  <!-- Подключаем шрифт для единообразия -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            background: #0d0d14;
-            color: #c0c0d0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-        /* ===== Шапка ===== */
-        .toolbar {
-            background: #161622;
-            height: 48px;
-            padding: 0 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #262638;
-            flex-shrink: 0;
-        }
+    /* верхняя панель подсказка */
+    .toolbar {
+      background: #2a2a2a;
+      padding: 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #3a3a3a;
+      flex-shrink: 0;
+      font-size: 14px;
+      letter-spacing: 0.3px;
+    }
+    .toolbar span:first-child {
+      color: #aaa;
+    }
+    .toolbar span:last-child {
+      background: #3a3a3a;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #8cf;
+      border: 1px solid #4a4a4a;
+    }
 
-        .toolbar .title {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: #569cd6;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .split-container {
+      display: flex;
+      flex: 1;
+      min-height: 0; /* для корректного сжатия */
+    }
 
-        .toolbar .title code {
-            background: #222233;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #ce9178;
-            font-size: 0.8rem;
-        }
+    /* левая панель — редактор кода */
+    .code-panel {
+      flex: 1 1 50%;
+      background: #1e1e1e;
+      border-right: 2px solid #333;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-        .toolbar button {
-            background: #252538;
-            border: 1px solid #3d3d5c;
-            color: #d0d0e0;
-            padding: 6px 14px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
+    .code-panel .header {
+      background: #252525;
+      padding: 6px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      font-size: 13px;
+      color: #ccc;
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .code-panel .header .lang {
+      background: #3a3a3a;
+      padding: 0 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #8cf;
+    }
 
-        .toolbar button:hover {
-            background: #32324e;
-            border-color: #565680;
-            color: #ffffff;
-        }
+    #codeEditor {
+      flex: 1;
+      width: 100%;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 20px 18px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+      tab-size: 2;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-y: auto;
+    }
+    #codeEditor::selection {
+      background: #4a6a8a;
+    }
 
-        /* ===== Двухколоночный макет ===== */
-        .workspace {
-            display: flex;
-            flex: 1;
-            height: calc(100vh - 48px);
-            overflow: hidden;
-        }
+    /* правая панель — превью ImGui */
+    .preview-panel {
+      flex: 1 1 50%;
+      background: #1c1c1c;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-        /* ===== ЛЕВАЯ СТОРОНА: C++ Редактор ===== */
-        .editor-side {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #1e1e1e;
-            border-right: 2px solid #282838;
-            min-width: 320px;
-        }
+    .preview-panel .header {
+      background: #252525;
+      padding: 6px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      font-size: 13px;
+      color: #ccc;
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .preview-panel .header .status {
+      color: #6a6;
+      font-size: 12px;
+    }
 
-        .panel-header {
-            background: #181824;
-            padding: 8px 14px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #707090;
-            border-bottom: 1px solid #262638;
-            display: flex;
-            justify-content: space-between;
-        }
+    #previewFrame {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #1c1c1c;
+      display: block;
+    }
 
-        #cpp-editor {
-            flex: 1;
-            width: 100%;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            border: none;
-            outline: none;
-            padding: 16px;
-            font-family: 'Consolas', 'Cascadia Code', 'Fira Code', monospace;
-            font-size: 13.5px;
-            line-height: 1.6;
-            resize: none;
-            white-space: pre;
-            overflow: auto;
-            tab-size: 4;
-        }
+    /* кнопка снизу для быстрого применения (опционально) */
+    .action-bar {
+      background: #222;
+      padding: 6px 20px;
+      border-top: 1px solid #333;
+      display: flex;
+      gap: 16px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    .action-bar button {
+      background: #3a5a7a;
+      border: none;
+      color: white;
+      padding: 4px 18px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .action-bar button:hover {
+      background: #4a7a9a;
+      transform: scale(1.02);
+    }
+    .action-bar .hint {
+      color: #777;
+      font-size: 12px;
+    }
 
-        /* ===== ПРАВАЯ СТОРОНА: Превью ImGui ===== */
-        .preview-side {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #12121c;
-            min-width: 320px;
-        }
+    /* адаптив — на узких экранах стек */
+    @media (max-width: 720px) {
+      .split-container {
+        flex-direction: column;
+      }
+      .code-panel {
+        border-right: none;
+        border-bottom: 2px solid #333;
+        flex: 1 1 50%;
+        min-height: 40vh;
+      }
+      .preview-panel {
+        flex: 1 1 50%;
+        min-height: 40vh;
+      }
+    }
 
-        .preview-viewport {
-            flex: 1;
-            padding: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-image: radial-gradient(#1e1e30 1px, transparent 1px);
-            background-size: 18px 18px;
-            overflow: auto;
-        }
-
-        /* ===== Эмулятор интерфейса Dear ImGui ===== */
-        #imgui-window {
-            width: 440px;
-            background: rgba(20, 20, 20, 0.95);
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            user-select: none;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            font-size: 13px;
-            transition: all 0.1s ease-out;
-        }
-
-        #imgui-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-        }
-
-        #imgui-body {
-            display: flex;
-            flex-direction: column;
-        }
-
-        #imgui-child {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .imgui-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .imgui-widget {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .imgui-checkbox-box {
-            width: 14px;
-            height: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-        }
-
-        .imgui-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .imgui-slider-bg {
-            width: 100%;
-            height: 18px;
-            position: relative;
-            cursor: ew-resize;
-            overflow: hidden;
-        }
-
-        .imgui-slider-fill {
-            height: 100%;
-            width: 45%;
-        }
-
-        .imgui-slider-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 11px;
-        }
-
-        .imgui-input {
-            width: 100%;
-            border: none;
-            outline: none;
-        }
-
-        .imgui-tabs {
-            display: flex;
-            gap: 2px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .imgui-tab {
-            padding: 4px 12px;
-            cursor: pointer;
-        }
-
-        @media (max-width: 768px) {
-            .workspace { flex-direction: column; }
-            .editor-side, .preview-side { flex: 1; min-width: 100%; }
-        }
-    </style>
+    /* скролл для редактора */
+    #codeEditor::-webkit-scrollbar {
+      width: 8px;
+      background: #1e1e1e;
+    }
+    #codeEditor::-webkit-scrollbar-thumb {
+      background: #4a4a4a;
+      border-radius: 6px;
+    }
+    #codeEditor::-webkit-scrollbar-thumb:hover {
+      background: #5a5a5a;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="toolbar">
-        <div class="title">
-            <span>🛠️ Dear ImGui C++ Style Designer</span>
-            <code>ImGuiStyle& style</code>
-        </div>
-        <button id="copyBtn">📋 Скопировать C++ код</button>
+  <div class="toolbar">
+    <span>🧩 ImGui · интерактивный редактор</span>
+    <span>⚡ C++ · реальное время</span>
+  </div>
+
+  <div class="split-container">
+    <!-- левая часть: редактор -->
+    <div class="code-panel">
+      <div class="header">
+        <span>📄 <strong>код дизайна</strong> (ImGui C++)</span>
+        <span class="lang">C++</span>
+      </div>
+      <textarea id="codeEditor" spellcheck="false" autofocus>// === Пример меню ImGui (C++) ===
+// Изменяй — справа сразу видно!
+
+ImGui::Begin("Меню", nullptr, ImGuiWindowFlags_None);
+
+if (ImGui::BeginTabBar("MainTabs")) {
+    if (ImGui::BeginTabItem("Настройки")) {
+        ImGui::Text("Параметры окна");
+        static float val = 0.5f;
+        ImGui::SliderFloat("Прозрачность", &val, 0.0f, 1.0f);
+        ImGui::Checkbox("Включить тень", &static_cast<bool&>(true));
+        ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Эффекты")) {
+        ImGui::Text("Эффекты пост-обработки");
+        static int effect = 0;
+        ImGui::RadioButton("None", &effect, 0);
+        ImGui::RadioButton("Blur", &effect, 1);
+        ImGui::RadioButton("Glow", &effect, 2);
+        ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Инфо")) {
+        ImGui::Text("ImGui версия: 1.90");
+        ImGui::Text("C++ код обновляется live");
+        if (ImGui::Button("Применить")) {
+            // симуляция действия
+        }
+        ImGui::EndTabItem();
+    }
+    ImGui::EndTabBar();
+}
+
+ImGui::End();</textarea>
     </div>
 
-    <div class="workspace">
-
-        <!-- ЛЕВАЯ ПАНЕЛЬ: C++ Редактор -->
-        <div class="editor-side">
-            <div class="panel-header">
-                <span>C++ Style Function</span>
-                <span id="char-counter">0 символов</span>
+    <!-- правая часть: превью ImGui -->
+    <div class="preview-panel">
+      <div class="header">
+        <span>🖥️ <strong>предпросмотр</strong> (ImGui)</span>
+        <span class="status">● живой рендеринг</span>
+      </div>
+      <iframe id="previewFrame" srcdoc="
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset='utf-8'>
+          <style>
+            body { margin:0; background:#1c1c1c; display:flex; align-items:center; justify-content:center; height:100vh; font-family:system-ui; }
+            .imgui-window { background:#2a2a2a; border-radius:12px; padding:24px 28px; min-width:320px; max-width:90%; box-shadow:0 12px 40px rgba(0,0,0,0.7); border:1px solid #4a4a4a; color:#ddd; }
+            .imgui-window h2 { margin:0 0 12px 0; font-weight:400; font-size:20px; color:#eee; letter-spacing:0.3px; border-bottom:1px solid #3a3a3a; padding-bottom:8px; }
+            .imgui-tab-bar { display:flex; gap:4px; margin:8px 0 16px 0; border-bottom:1px solid #3a3a3a; }
+            .imgui-tab { padding:6px 16px; border-radius:6px 6px 0 0; background:#333; color:#aaa; cursor:default; border:1px solid #3a3a3a; border-bottom:none; }
+            .imgui-tab.active { background:#3a5a7a; color:#fff; border-color:#4a7a9a; }
+            .imgui-content { padding:8px 0; }
+            .imgui-text { margin:6px 0; }
+            .imgui-slider { display:flex; align-items:center; gap:12px; margin:10px 0; }
+            .imgui-slider input { width:100%; background:#3a3a3a; height:4px; border-radius:4px; accent-color:#6a9acf; }
+            .imgui-slider span { min-width:40px; color:#ccc; }
+            .imgui-check { display:flex; align-items:center; gap:8px; margin:6px 0; }
+            .imgui-check input { accent-color:#6a9acf; width:16px; height:16px; }
+            .imgui-radio-group { margin:6px 0; display:flex; gap:12px; flex-wrap:wrap; }
+            .imgui-radio-group label { display:flex; align-items:center; gap:4px; }
+            .imgui-btn { background:#3a5a7a; border:none; color:white; padding:6px 18px; border-radius:20px; margin-top:12px; cursor:default; }
+            .imgui-btn:hover { background:#4a7a9a; }
+            .imgui-footer { margin-top:16px; font-size:12px; color:#666; border-top:1px solid #2a2a2a; padding-top:10px; text-align:center; }
+          </style>
+        </head>
+        <body>
+          <div class='imgui-window'>
+            <h2>⚙️ Меню (дефолтный вид)</h2>
+            <div class='imgui-tab-bar'>
+              <div class='imgui-tab active'>Настройки</div>
+              <div class='imgui-tab'>Эффекты</div>
+              <div class='imgui-tab'>Инфо</div>
             </div>
-            <textarea id="cpp-editor" spellcheck="false"></textarea>
-        </div>
-
-        <!-- ПРАВАЯ ПАНЕЛЬ: Live Превью ImGui -->
-        <div class="preview-side">
-            <div class="panel-header">
-                <span>ImGui Preview (C++ Engine)</span>
-                <span>Live View</span>
-            </div>
-            <div class="preview-viewport">
-                
-                <div id="imgui-window">
-                    <div id="imgui-header">
-                        <span>Cheat Menu v2.0 (Dear ImGui)</span>
-                        <span style="opacity: 0.6; cursor: pointer;">_ X</span>
-                    </div>
-
-                    <div id="imgui-body">
-                        <div class="imgui-tabs">
-                            <div class="imgui-tab" id="tab-active">Aimbot</div>
-                            <div class="imgui-tab">Visuals</div>
-                            <div class="imgui-tab">Misc</div>
-                            <div class="imgui-tab">Settings</div>
-                        </div>
-
-                        <div id="imgui-child">
-                            <div class="imgui-row">
-                                <label class="imgui-widget">
-                                    <div class="imgui-checkbox-box" id="cb1">✓</div>
-                                    <span style="margin-left: 8px;" id="text-main">Enable Master Switch</span>
-                                </label>
-                            </div>
-
-                            <div class="imgui-row">
-                                <label class="imgui-widget">
-                                    <div class="imgui-checkbox-box" id="cb2"></div>
-                                    <span style="margin-left: 8px;">Silent Aim</span>
-                                </label>
-                            </div>
-
-                            <div style="margin-top: 4px;">
-                                <div style="font-size: 11px; margin-bottom: 3px;" id="text-sub">FOV Radius: 45.0f</div>
-                                <div class="imgui-slider-bg" id="slider-bg">
-                                    <div class="imgui-slider-fill" id="slider-fill"></div>
-                                    <div class="imgui-slider-text" id="text-slider">45.0f</div>
-                                </div>
-                            </div>
-
-                            <div style="margin-top: 4px;">
-                                <div style="font-size: 11px; margin-bottom: 3px;">Config Name</div>
-                                <div class="imgui-input" id="input-bg" style="padding: 4px 8px;">default_preset</div>
-                            </div>
-
-                            <div class="imgui-row" style="margin-top: 6px;">
-                                <div class="imgui-button" id="btn-main">Save Config</div>
-                                <div class="imgui-button" id="btn-sec">Load Config</div>
-                            </div>
-                        </div>
-                    </div>
+            <div class='imgui-content'>
+              <div class='imgui-text'>Параметры окна</div>
+              <div class='imgui-slider'>
+                <span>Прозрачность</span>
+                <input type='range' min='0' max='1' step='0.01' value='0.5'>
+                <span>0.50</span>
+              </div>
+              <div class='imgui-check'>
+                <input type='checkbox' checked> <span>Включить тень</span>
+              </div>
+              <div style='margin-top:12px; border-top:1px solid #2a2a2a; padding-top:12px;'>
+                <div class='imgui-text' style='color:#aaa;'>Эффекты пост-обработки</div>
+                <div class='imgui-radio-group'>
+                  <label><input type='radio' name='effect' checked> None</label>
+                  <label><input type='radio' name='effect'> Blur</label>
+                  <label><input type='radio' name='effect'> Glow</label>
                 </div>
-
+              </div>
+              <button class='imgui-btn'>Применить</button>
             </div>
-        </div>
-
+            <div class='imgui-footer'>ImGui 1.90 · C++ live preview</div>
+          </div>
+        </body>
+        </html>
+      "></iframe>
     </div>
+  </div>
 
-    <script>
-        (function() {
-            const editor = document.getElementById('cpp-editor');
-            const charCounter = document.getElementById('char-counter');
-            const copyBtn = document.getElementById('copyBtn');
+  <div class="action-bar">
+    <button id="applyCodeBtn">⟳ Применить код</button>
+    <span class="hint">(изменяй код слева — превью обновится)</span>
+    <span style="margin-left:auto; color:#666; font-size:12px;">⚡ GitHub Pages ready</span>
+  </div>
 
-            const defaultCppCode = 'static void styleForGUI() {\n' +
-                '    ImGuiStyle &style = ImGui::GetStyle();\n\n' +
-                '    // Скругления углов\n' +
-                '    style.WindowRounding = 8.0f;\n' +
-                '    style.ChildRounding = 6.0f;\n' +
-                '    style.FrameRounding = 4.0f;\n' +
-                '    style.PopupRounding = 6.0f;\n' +
-                '    style.ScrollbarRounding = 4.0f;\n' +
-                '    style.GrabRounding = 4.0f;\n' +
-                '    style.TabRounding = 4.0f;\n\n' +
-                '    // Отступы и размеры\n' +
-                '    style.WindowPadding = ImVec2(14, 14);\n' +
-                '    style.FramePadding = ImVec2(8, 6);\n' +
-                '    style.ItemSpacing = ImVec2(10, 10);\n' +
-                '    style.WindowBorderSize = 1.0f;\n' +
-                '    style.FrameBorderSize = 1.0f;\n\n' +
-                '    // Цветовая схема\n' +
-                '    ImVec4* colors = style.Colors;\n' +
-                '    colors[ImGuiCol_WindowBg]         = ImVec4(0.10f, 0.10f, 0.13f, 0.95f);\n' +
-                '    colors[ImGuiCol_ChildBg]          = ImVec4(0.14f, 0.14f, 0.18f, 0.60f);\n' +
-                '    colors[ImGuiCol_Border]           = ImVec4(0.25f, 0.25f, 0.35f, 0.50f);\n' +
-                '    colors[ImGuiCol_FrameBg]          = ImVec4(0.18f, 0.18f, 0.24f, 1.00f);\n' +
-                '    colors[ImGuiCol_FrameBgHovered]   = ImVec4(0.24f, 0.24f, 0.32f, 1.00f);\n' +
-                '    colors[ImGuiCol_FrameBgActive]    = ImVec4(0.30f, 0.30f, 0.40f, 1.00f);\n' +
-                '    colors[ImGuiCol_TitleBg]          = ImVec4(0.08f, 0.08f, 0.10f, 1.00f);\n' +
-                '    colors[ImGuiCol_TitleBgActive]    = ImVec4(0.14f, 0.14f, 0.18f, 1.00f);\n' +
-                '    colors[ImGuiCol_Button]           = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);\n' +
-                '    colors[ImGuiCol_ButtonHovered]    = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);\n' +
-                '    colors[ImGuiCol_ButtonActive]     = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);\n' +
-                '    colors[ImGuiCol_Header]           = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);\n' +
-                '    colors[ImGuiCol_HeaderHovered]    = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);\n' +
-                '    colors[ImGuiCol_Text]             = ImVec4(0.92f, 0.92f, 0.95f, 1.00f);\n' +
-                '    colors[ImGuiCol_TextDisabled]     = ImVec4(0.50f, 0.50f, 0.55f, 1.00f);\n' +
-                '    colors[ImGuiCol_CheckMark]        = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);\n' +
-                '    colors[ImGuiCol_SliderGrab]       = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);\n' +
-                '}';
+  <script>
+    (function() {
+      const editor = document.getElementById('codeEditor');
+      const previewFrame = document.getElementById('previewFrame');
 
-            function parseImGuiCpp(cppText) {
-                const styles = {
-                    WindowRounding: 8, ChildRounding: 6, FrameRounding: 4, TabRounding: 4,
-                    WindowPadding: [14, 14], FramePadding: [8, 6], ItemSpacing: [10, 10],
-                    WindowBorderSize: 1, FrameBorderSize: 1, colors: {}
-                };
+      // --- парсинг "C++ кода" и превращение в минимальный HTML рендеринг ImGui ---
+      function generatePreviewFromCode(code) {
+        // Базовый HTML с обёрткой, поверх которой накладываем наши "виджеты"
+        // Используем упрощённый парсинг: ищем ключевые слова ImGui и рисуем примитивы.
+        // Это демо-пример, который показывает как код влияет на визуал.
+        // Поддерживаются: Begin, End, BeginTabBar, BeginTabItem, EndTabBar, EndTabItem,
+        // Text, SliderFloat, Checkbox, RadioButton, Button
 
-                function imVec4ToRgba(str) {
-                    const match = str.match(/ImVec4\s*\(\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*\)/);
-                    if (match) {
-                        const r = Math.round(parseFloat(match[1]) * 255);
-                        const g = Math.round(parseFloat(match[2]) * 255);
-                        const b = Math.round(parseFloat(match[3]) * 255);
-                        const a = parseFloat(match[4]);
-                        return `rgba(${r}, ${g}, ${b}, ${a})`;
-                    }
-                    return null;
-                }
+        let html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { margin:0; background:#1c1c1c; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:system-ui, sans-serif; padding:16px; }
+            .imgui-window { background:#2a2a2a; border-radius:12px; padding:20px 24px; min-width:300px; max-width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.7); border:1px solid #4a4a4a; color:#ddd; width:fit-content; margin:auto; }
+            .imgui-window h2 { margin:0 0 8px 0; font-weight:400; font-size:20px; color:#eee; border-bottom:1px solid #3a3a3a; padding-bottom:6px; }
+            .imgui-tab-bar { display:flex; gap:4px; margin:8px 0 12px 0; border-bottom:1px solid #3a3a3a; flex-wrap:wrap; }
+            .imgui-tab { padding:4px 14px; border-radius:6px 6px 0 0; background:#333; color:#aaa; cursor:default; border:1px solid #3a3a3a; border-bottom:none; font-size:14px; }
+            .imgui-tab.active { background:#3a5a7a; color:#fff; border-color:#4a7a9a; }
+            .imgui-content { padding:4px 0; }
+            .imgui-text { margin:6px 0; }
+            .imgui-slider { display:flex; align-items:center; gap:10px; margin:8px 0; }
+            .imgui-slider input { width:140px; background:#3a3a3a; height:4px; border-radius:4px; accent-color:#6a9acf; }
+            .imgui-slider span { min-width:40px; color:#ccc; font-size:14px; }
+            .imgui-check { display:flex; align-items:center; gap:6px; margin:4px 0; }
+            .imgui-check input { accent-color:#6a9acf; width:16px; height:16px; }
+            .imgui-radio-group { margin:6px 0; display:flex; gap:12px; flex-wrap:wrap; }
+            .imgui-radio-group label { display:flex; align-items:center; gap:4px; font-size:14px; }
+            .imgui-btn { background:#3a5a7a; border:none; color:white; padding:4px 18px; border-radius:20px; margin-top:8px; cursor:default; font-size:14px; }
+            .imgui-btn:hover { background:#4a7a9a; }
+            .imgui-footer { margin-top:12px; font-size:12px; color:#666; border-top:1px solid #2a2a2a; padding-top:8px; text-align:center; }
+            .imgui-separator { border-top:1px solid #2a2a2a; margin:8px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="imgui-window">
+            <h2>⚙️ Меню</h2>
+        `;
 
-                const floatMatches = cppText.matchAll(/style\.([A-Za-z0-9_]+)\s*=\s*([0-9.]+)[fF]?/g);
-                for (const m of floatMatches) styles[m[1]] = parseFloat(m[2]);
+        // Парсим код построчно (очень упрощённо)
+        const lines = code.split('\n');
+        let inTabBar = false;
+        let activeTab = null;
+        let tabItems = [];
+        let insideTabItem = false;
+        let currentTabLabel = '';
+        let contentHtml = '';
+        let hasContent = false;
 
-                const vecMatches = cppText.matchAll(/style\.([A-Za-z0-9_]+)\s*=\s*ImVec2\s*\(\s*([0-9.]+)[fF]?\s*,\s*([0-9.]+)[fF]?\s*\)/g);
-                for (const m of vecMatches) styles[m[1]] = [parseFloat(m[2]), parseFloat(m[3])];
+        // Функция для добавления содержимого в текущий таб или в общий контент
+        function appendContent(str) {
+          if (insideTabItem) {
+            contentHtml += str;
+          } else {
+            // если не внутри таба, добавляем в основной блок (но для демо просто добавим)
+            contentHtml += str;
+          }
+          hasContent = true;
+        }
 
-                const colorMatches = cppText.matchAll(/colors\s*\[\s*([A-Za-z0-9_]+)\s*\]\s*=\s*(ImVec4\s*\([^)]+\))/g);
-                for (const m of colorMatches) {
-                    const rgba = imVec4ToRgba(m[2]);
-                    if (rgba) styles.colors[m[1]] = rgba;
-                }
+        // Простейший парсер
+        for (let line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
 
-                return styles;
+          // Проверяем BeginTabBar
+          if (trimmed.includes('BeginTabBar')) {
+            inTabBar = true;
+            continue;
+          }
+          if (trimmed.includes('EndTabBar')) {
+            inTabBar = false;
+            // закрываем таббар
+            continue;
+          }
+
+          // BeginTabItem
+          if (trimmed.includes('BeginTabItem')) {
+            const match = trimmed.match(/BeginTabItem\s*\(\s*["']([^"']+)["']/);
+            if (match) {
+              currentTabLabel = match[1];
+              insideTabItem = true;
+              // добавляем таб в бар (если ещё не добавлен)
+              if (!tabItems.includes(currentTabLabel)) {
+                tabItems.push(currentTabLabel);
+              }
             }
+            continue;
+          }
+          if (trimmed.includes('EndTabItem')) {
+            insideTabItem = false;
+            continue;
+          }
 
-            function applyStyle() {
-                const code = editor.value;
-                const s = parseImGuiCpp(code);
-
-                const windowEl = document.getElementById('imgui-window');
-                const headerEl = document.getElementById('imgui-header');
-                const bodyEl = document.getElementById('imgui-body');
-                const childEl = document.getElementById('imgui-child');
-                
-                const cbs = [document.getElementById('cb1'), document.getElementById('cb2')];
-                const btnMain = document.getElementById('btn-main');
-                const btnSec = document.getElementById('btn-sec');
-                const sliderBg = document.getElementById('slider-bg');
-                const sliderFill = document.getElementById('slider-fill');
-                const inputBg = document.getElementById('input-bg');
-                const tabActive = document.getElementById('tab-active');
-
-                windowEl.style.borderRadius = `${s.WindowRounding || 0}px`;
-                childEl.style.borderRadius = `${s.ChildRounding || 0}px`;
-                
-                const frameRound = `${s.FrameRounding || 0}px`;
-                cbs.forEach(cb => cb.style.borderRadius = frameRound);
-                btnMain.style.borderRadius = frameRound;
-                btnSec.style.borderRadius = frameRound;
-                sliderBg.style.borderRadius = frameRound;
-                inputBg.style.borderRadius = frameRound;
-
-                if (tabActive) tabActive.style.borderRadius = `${s.TabRounding || 0}px ${s.TabRounding || 0}px 0 0`;
-
-                if (s.WindowPadding) {
-                    bodyEl.style.padding = `${s.WindowPadding[1]}px ${s.WindowPadding[0]}px`;
-                    headerEl.style.padding = `${s.WindowPadding[1] * 0.6}px ${s.WindowPadding[0]}px`;
-                }
-                if (s.ItemSpacing) {
-                    childEl.style.gap = `${s.ItemSpacing[1]}px`;
-                    bodyEl.style.gap = `${s.ItemSpacing[1]}px`;
-                }
-                if (s.FramePadding) {
-                    const fp = `${s.FramePadding[1]}px ${s.FramePadding[0]}px`;
-                    btnMain.style.padding = fp;
-                    btnSec.style.padding = fp;
-                    childEl.style.padding = `${s.FramePadding[1] * 2}px ${s.FramePadding[0] * 1.5}px`;
-                }
-
-                windowEl.style.border = `${s.WindowBorderSize || 0}px solid ${s.colors.ImGuiCol_Border || '#333'}`;
-                childEl.style.border = `${s.FrameBorderSize || 0}px solid ${s.colors.ImGuiCol_Border || 'transparent'}`;
-                inputBg.style.border = `${s.FrameBorderSize || 0}px solid ${s.colors.ImGuiCol_Border || 'transparent'}`;
-
-                if (s.colors.ImGuiCol_WindowBg) windowEl.style.backgroundColor = s.colors.ImGuiCol_WindowBg;
-                if (s.colors.ImGuiCol_TitleBgActive || s.colors.ImGuiCol_TitleBg) {
-                    headerEl.style.backgroundColor = s.colors.ImGuiCol_TitleBgActive || s.colors.ImGuiCol_TitleBg;
-                }
-                if (s.colors.ImGuiCol_ChildBg) childEl.style.backgroundColor = s.colors.ImGuiCol_ChildBg;
-
-                windowEl.style.color = s.colors.ImGuiCol_Text || '#fff';
-
-                if (s.colors.ImGuiCol_Button) btnMain.style.backgroundColor = s.colors.ImGuiCol_Button;
-                if (s.colors.ImGuiCol_FrameBg) {
-                    btnSec.style.backgroundColor = s.colors.ImGuiCol_FrameBg;
-                    cbs.forEach(cb => cb.style.backgroundColor = s.colors.ImGuiCol_FrameBg);
-                    sliderBg.style.backgroundColor = s.colors.ImGuiCol_FrameBg;
-                    inputBg.style.backgroundColor = s.colors.ImGuiCol_FrameBg;
-                }
-
-                if (s.colors.ImGuiCol_CheckMark) cbs[0].style.color = s.colors.ImGuiCol_CheckMark;
-                if (s.colors.ImGuiCol_SliderGrab) sliderFill.style.backgroundColor = s.colors.ImGuiCol_SliderGrab;
-                if (tabActive && s.colors.ImGuiCol_Header) tabActive.style.backgroundColor = s.colors.ImGuiCol_Header;
-
-                charCounter.textContent = code.length + ' символов';
+          // Обработка виджетов
+          if (trimmed.includes('Text')) {
+            const match = trimmed.match(/Text\s*\(\s*["']([^"']+)["']/);
+            if (match) {
+              appendContent(`<div class="imgui-text">${match[1]}</div>`);
             }
+            continue;
+          }
 
-            editor.addEventListener('input', applyStyle);
+          if (trimmed.includes('SliderFloat')) {
+            const match = trimmed.match(/SliderFloat\s*\(\s*["']([^"']+)["']/);
+            if (match) {
+              const label = match[1];
+              appendContent(`
+                <div class="imgui-slider">
+                  <span>${label}</span>
+                  <input type="range" min="0" max="1" step="0.01" value="0.5">
+                  <span>0.50</span>
+                </div>
+              `);
+            }
+            continue;
+          }
 
-            copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(editor.value).then(() => {
-                    const orig = copyBtn.textContent;
-                    copyBtn.textContent = '✅ Скопировано!';
-                    setTimeout(() => copyBtn.textContent = orig, 1500);
-                });
-            });
+          if (trimmed.includes('Checkbox')) {
+            const match = trimmed.match(/Checkbox\s*\(\s*["']([^"']+)["']/);
+            if (match) {
+              const label = match[1];
+              appendContent(`
+                <div class="imgui-check">
+                  <input type="checkbox" checked> <span>${label}</span>
+                </div>
+              `);
+            }
+            continue;
+          }
 
-            editor.value = defaultCppCode;
-            applyStyle();
-        })();
-    </script>
+          if (trimmed.includes('RadioButton')) {
+            const match = trimmed.match(/RadioButton\s*\(\s*["']([^"']+)["']/);
+            if (match) {
+              const label = match[1];
+              appendContent(`
+                <div class="imgui-radio-group">
+                  <label><input type="radio" name="effect" checked> ${label}</label>
+                </div>
+              `);
+            }
+            continue;
+          }
+
+          if (trimmed.includes('Button')) {
+            const match = trimmed.match(/Button\s*\(\s*["']([^"']+)["']/);
+            if (match) {
+              const label = match[1];
+              appendContent(`<button class="imgui-btn">${label}</button>`);
+            }
+            continue;
+          }
+
+          // Если встретили Begin без таба — просто заголовок окна
+          if (trimmed.includes('Begin') && !trimmed.includes('BeginTab')) {
+            // ничего не делаем, уже есть заголовок
+          }
+        }
+
+        // Генерируем таб-бар если есть табы
+        if (tabItems.length > 0) {
+          html += `<div class="imgui-tab-bar">`;
+          for (let i = 0; i < tabItems.length; i++) {
+            const cls = (i === 0) ? 'imgui-tab active' : 'imgui-tab';
+            html += `<div class="${cls}">${tabItems[i]}</div>`;
+          }
+          html += `</div>`;
+        }
+
+        // Добавляем содержимое (если есть)
+        if (contentHtml) {
+          html += `<div class="imgui-content">${contentHtml}</div>`;
+        } else {
+          // если ничего не спарсили — покажем дефолтный контент
+          html += `
+            <div class="imgui-content">
+              <div class="imgui-text">Настройки окна</div>
+              <div class="imgui-slider"><span>Прозрачность</span><input type="range" value="0.5"><span>0.50</span></div>
+              <div class="imgui-check"><input type="checkbox" checked> <span>Включить тень</span></div>
+              <div class="imgui-separator"></div>
+              <div class="imgui-text">Эффекты</div>
+              <div class="imgui-radio-group"><label><input type="radio" name="eff" checked> None</label><label><input type="radio" name="eff"> Blur</label></div>
+              <button class="imgui-btn">Применить</button>
+            </div>
+          `;
+        }
+
+        html += `
+            <div class="imgui-footer">ImGui 1.90 · C++ live</div>
+          </div>
+        </body>
+        </html>
+        `;
+
+        return html;
+      }
+
+      // --- обновление превью ---
+      function updatePreview() {
+        const code = editor.value;
+        const previewHtml = generatePreviewFromCode(code);
+        previewFrame.srcdoc = previewHtml;
+      }
+
+      // --- события ---
+      editor.addEventListener('input', updatePreview);
+
+      document.getElementById('applyCodeBtn').addEventListener('click', updatePreview);
+
+      // инициализация
+      updatePreview();
+
+      // дополнительно: подсветка (можно было бы добавить, но для простоты оставим)
+      console.log('ImGui Live Editor готов!');
+    })();
+  </script>
 </body>
 </html>
